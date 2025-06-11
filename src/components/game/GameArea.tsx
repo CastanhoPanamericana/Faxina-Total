@@ -88,19 +88,19 @@ const GameArea: React.FC<GameAreaProps> = ({
 
   const initializeBubbles = useCallback((canvas: HTMLCanvasElement) => {
     const newBubbles: Bubble[] = [];
-    const numBubbles = 20; // Reduced for performance, and larger bubbles cover more area
+    const numBubbles = 20; 
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = Math.random() * 200 + 100; // Increased max radius (was 160 + 60)
-      const minR = Math.random() * 100 + 60;  // Increased min radius (was 50 + 30)
+      const maxR = Math.random() * 200 + 100; 
+      const minR = Math.random() * 100 + 60;  
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: minR,
         maxRadius: maxR,
         minRadius: minR,
-        growthSpeed: Math.random() * 0.005 + 0.002, // Slower growth (was 0.010 + 0.005)
+        growthSpeed: Math.random() * 0.005 + 0.002, 
         opacity: 0,
-        opacitySpeed: Math.random() * 0.0005 + 0.0001, // Slower opacity change (was 0.0010 + 0.0002)
+        opacitySpeed: Math.random() * 0.0005 + 0.0001, 
         isGrowing: true,
         isFadingIn: true,
       });
@@ -147,13 +147,13 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.3 + 0.7)) { // Increased base opacity (was 0.5 + 0.6)
+        if (bubble.opacity >= (Math.random() * 0.3 + 0.7)) { 
           bubble.opacity = Math.min(bubble.opacity, 1); 
           bubble.isFadingIn = false;
         }
       } else {
         bubble.opacity -= bubble.opacitySpeed;
-        if (bubble.opacity <= 0.1) { // Don't fade completely
+        if (bubble.opacity <= 0.1) { 
           bubble.opacity = 0.1;
           bubble.isFadingIn = true;
           bubble.x = Math.random() * canvas.width;
@@ -253,7 +253,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         drawFallbackBackground(ctx, canvas);
       }
     }
-  }, [isGameActive, animateBubbles, drawFallbackBackground, initializeBubbles]);
+  }, [isGameActive, animateBubbles, drawFallbackBackground, initializeBubbles, currentDirtColor]);
 
 
   const handleInteractionStart = (e: React.MouseEvent | React.TouchEvent) => {
@@ -319,7 +319,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.globalCompositeOperation = originalCompositeOperation;
 
     const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS; 
-    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 0.2; // Aumentado de 0.02 para 0.2
+    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 0.6;
     cleanedPixelsRef.current = newCleanedAmount;
 
     const progress = Math.min(100, (newCleanedAmount / totalPixelsToCleanRef.current) * 100);
@@ -383,5 +383,3 @@ const GameArea: React.FC<GameAreaProps> = ({
 };
 
 export default GameArea;
-
-    
