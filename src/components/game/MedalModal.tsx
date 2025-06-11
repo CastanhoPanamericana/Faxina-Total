@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -43,7 +44,7 @@ const GameStatusModal: React.FC<ModalProps> = ({ isOpen, onClose, title, descrip
         <AlertDialogFooter className="mt-4">
           <AlertDialogAction asChild>
             <Button onClick={onClose} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-              {isWin ? "Play Again" : "Try Again"}
+              {isWin ? "Jogar Novamente" : "Tentar Novamente"}
             </Button>
           </AlertDialogAction>
         </AlertDialogFooter>

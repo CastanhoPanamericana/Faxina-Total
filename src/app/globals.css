@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -41,6 +42,9 @@ body {
     --sidebar-accent-foreground: 210 29% 15%;
     --sidebar-border: 208 33% 75%;
     --sidebar-ring: 208 33% 51%;
+
+    /* Font variables */
+    --font-lato: "Lato", sans-serif;
   }
   .dark {
     --background: 210 29% 10%;
@@ -84,9 +88,9 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-pt-sans); /* Default to PT Sans */
+    font-family: var(--font-lato); /* Default to Lato */
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-playfair-display); /* Playfair for headlines */
+    font-family: var(--font-lato); /* Lato for headlines */
   }
 }

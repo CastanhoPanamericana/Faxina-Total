@@ -1,20 +1,20 @@
+
 // @ts-nocheck
 "use client";
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import Image from 'next/image';
+import Image from 'next/image'; // Import next/image
 
-const SPONGE_RADIUS = 30;
+const SPONGE_RADIUS = 50; // Aumentado para 50
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-// For simplicity in this iteration, we won't use a fine-grained grid for progress.
-// Progress will be an estimate based on cleaning actions.
-// A more robust solution would involve analyzing canvas pixel data or a cleanliness grid.
 
 interface GameAreaProps {
   onProgressUpdate: (progress: number) => void;
   onCleaningComplete: () => void;
   dirtyImageSrc: string;
+  cleanImageSrc: string;
+  spongeImageSrc: string;
   isGameActive: boolean;
   resetCanvas: boolean;
 }
@@ -23,21 +23,23 @@ const GameArea: React.FC<GameAreaProps> = ({
   onProgressUpdate,
   onCleaningComplete,
   dirtyImageSrc,
+  cleanImageSrc,
+  spongeImageSrc,
   isGameActive,
   resetCanvas,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const spongeRef = useRef<HTMLDivElement>(null);
+  const spongeRef = useRef<HTMLImageElement>(null); // Alterado para HTMLImageElement
   const [isCleaning, setIsCleaning] = useState(false);
   const [cleanedPixels, setCleanedPixels] = useState(0);
-  const totalPixelsToCleanRef = useRef<number>(CANVAS_WIDTH * CANVAS_HEIGHT * 0.8); // Estimate 80% needs cleaning
+  const totalPixelsToCleanRef = useRef<number>(CANVAS_WIDTH * CANVAS_HEIGHT * 0.8);
 
   const drawDirtyImage = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (ctx && canvas) {
       const img = new window.Image();
-      img.crossOrigin = "anonymous"; // Important for placehold.co if it serves with CORS headers
+      img.crossOrigin = "anonymous";
       img.src = dirtyImageSrc;
       img.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -46,13 +48,10 @@ const GameArea: React.FC<GameAreaProps> = ({
         onProgressUpdate(0); 
       };
       img.onerror = () => {
-        // Fallback if image fails to load (e.g. CORS issue without proper headers from placehold.co)
-        // Draw a placeholder dirty pattern
-        ctx.fillStyle = '#A0522D'; // Brown color for dirt
+        ctx.fillStyle = '#8B4513'; // Cor de sujeira (marrom sela)
         ctx.fillRect(0,0, canvas.width, canvas.height);
-        // Add some splotches
         for(let i = 0; i < 50; i++) {
-            ctx.fillStyle = `rgba(80,40,10,${Math.random()*0.5 + 0.3})`;
+            ctx.fillStyle = `rgba(101,67,33,${Math.random()*0.5 + 0.3})`; // Marrom mais escuro
             ctx.beginPath();
             ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*30+10, 0, Math.PI*2);
             ctx.fill();
@@ -70,6 +69,8 @@ const GameArea: React.FC<GameAreaProps> = ({
 
   const handleInteractionStart = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isGameActive) return;
+    // Assegura que o evento padrão de arrastar imagem não ocorra
+    if (e.cancelable) e.preventDefault();
     setIsCleaning(true);
     moveSponge(e); 
   };
@@ -84,14 +85,18 @@ const GameArea: React.FC<GameAreaProps> = ({
     const sponge = spongeRef.current;
     if (!canvas || !sponge) return;
 
+    // Assegura que o evento padrão de arrastar imagem não ocorra durante o movimento
+    if (isCleaning && e.cancelable) e.preventDefault();
+
+
     const rect = canvas.getBoundingClientRect();
     let clientX, clientY;
     if ('touches' in e) {
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
     } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
+      clientX = (e as React.MouseEvent).clientX;
+      clientY = (e as React.MouseEvent).clientY;
     }
 
     const x = clientX - rect.left;
@@ -116,45 +121,48 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.arc(x, y, SPONGE_RADIUS, 0, Math.PI * 2, false);
     ctx.fill();
     
-    // Simplified progress: count cleaning operations
-    // A more accurate method would be to analyze pixel data or use a grid
-    const newCleanedAmount = cleanedPixels + Math.PI * SPONGE_RADIUS * SPONGE_RADIUS * 0.1; // Estimate cleaned area
+    const newCleanedAmount = cleanedPixels + Math.PI * SPONGE_RADIUS * SPONGE_RADIUS * 0.1; 
     setCleanedPixels(newCleanedAmount);
     
     const progress = Math.min(100, (newCleanedAmount / totalPixelsToCleanRef.current) * 100);
     onProgressUpdate(progress);
 
-    if (progress >= 99) { // Threshold for completion
+    if (progress >= 99) {
       onCleaningComplete();
     }
   };
 
   useEffect(() => {
     const sponge = spongeRef.current;
+    const gameAreaDiv = canvasRef.current?.parentElement;
+
     const handleMouseLeave = () => {
       if (sponge) sponge.style.display = 'none';
       setIsCleaning(false);
     }
-    const canvas = canvasRef.current;
-    if (canvas) {
-       canvas.addEventListener('mouseleave', handleMouseLeave);
+    if (gameAreaDiv) {
+       gameAreaDiv.addEventListener('mouseleave', handleMouseLeave);
     }
     return () => {
-      if (canvas) {
-        canvas.removeEventListener('mouseleave', handleMouseLeave);
+      if (gameAreaDiv) {
+        gameAreaDiv.removeEventListener('mouseleave', handleMouseLeave);
       }
     }
   }, []);
 
 
   return (
-    <div className="relative w-[800px] h-[600px] mx-auto border-2 border-primary rounded-lg shadow-lg overflow-hidden cursor-none"
+    <div 
+      className="relative w-[800px] h-[600px] mx-auto border-2 border-primary rounded-lg shadow-lg overflow-hidden cursor-none"
+      style={{ backgroundImage: `url(${cleanImageSrc})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
       onMouseDown={handleInteractionStart}
       onMouseUp={handleInteractionEnd}
       onMouseMove={moveSponge}
       onTouchStart={handleInteractionStart}
       onTouchEnd={handleInteractionEnd}
       onTouchMove={moveSponge}
+      // Prevenir arrastar da imagem de fundo
+      onDragStart={(e) => e.preventDefault()}
     >
       <canvas
         ref={canvasRef}
@@ -162,16 +170,17 @@ const GameArea: React.FC<GameAreaProps> = ({
         height={CANVAS_HEIGHT}
         className="absolute top-0 left-0"
       />
-      <div
+      <Image
         ref={spongeRef}
-        className="absolute bg-gray-500 rounded-full shadow-xl pointer-events-none hidden"
-        style={{
-          width: `${SPONGE_RADIUS * 2}px`,
-          height: `${SPONGE_RADIUS * 2}px`,
-          border: '2px solid #A9A9A9' 
-        }}
+        src={spongeImageSrc}
+        alt="Esponja"
+        width={SPONGE_RADIUS * 2}
+        height={SPONGE_RADIUS * 2}
+        className="absolute pointer-events-none hidden"
+        style={{ objectFit: 'contain' }} // Para manter a proporção da esponja
+        draggable="false" // Prevenir arrastar da imagem da esponja
+        data-ai-hint="kitchen sponge"
       />
-      {/* The clean background is provided by the page's bg-background color */}
     </div>
   );
 };
