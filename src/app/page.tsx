@@ -22,14 +22,14 @@ export default function CleanSweepPage() {
   const [score, setScore] = useState(0);
   const [resetCanvasKey, setResetCanvasKey] = useState(0);
 
-  // URLs das imagens - usando placehold.co para consistência
-  const [dirtyImage, setDirtyImage] = useState("https://placehold.co/800x600.png");
+  // URLs das imagens
+  const [dirtyImage, setDirtyImage] = useState("https://rodrigocastanho.com/_testes/piaSuja.jpg");
   const [cleanImage, setCleanImage] = useState("https://rodrigocastanho.com/_testes/piaLimpa.jpg");
   const [spongeImage, setSpongeImage] = useState("https://bufalloinox.com.br/wp-content/uploads/2021/11/esponja-de-aco-inox.png");
 
-  const dirtyImageAiHint = "cozinha suja desenho";
-  const cleanImageAiHint = "cozinha limpa desenho";
-  const spongeImageAiHint = "esponja cozinha";
+  const dirtyImageAiHint = "pia cozinha suja";
+  const cleanImageAiHint = "pia cozinha limpa";
+  const spongeImageAiHint = "esponja aço";
 
 
   useEffect(() => {
