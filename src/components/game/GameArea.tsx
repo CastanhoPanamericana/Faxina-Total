@@ -60,17 +60,17 @@ const GameArea: React.FC<GameAreaProps> = ({
     const newBubbles: Bubble[] = [];
     const numBubbles = 30;
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = Math.random() * 30 + 16; // Aumentado: era Math.random() * 15 + 8
-      const minR = Math.random() * 8 + 4;   // Aumentado: era Math.random() * 4 + 2
+      const maxR = Math.random() * 30 + 16;
+      const minR = Math.random() * 8 + 4;
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: minR,
         maxRadius: maxR,
         minRadius: minR,
-        growthSpeed: Math.random() * 0.05 + 0.025, // Mais lento: era Math.random() * 0.1 + 0.05
+        growthSpeed: Math.random() * 0.05 + 0.025,
         opacity: 0,
-        opacitySpeed: Math.random() * 0.005 + 0.001, // Mais lento: era Math.random() * 0.01 + 0.002
+        opacitySpeed: Math.random() * 0.005 + 0.001,
         isGrowing: true,
         isFadingIn: true,
       });
@@ -108,8 +108,8 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.2 + 0.3)) { // Opacidade aumentada: era (Math.random() * 0.2 + 0.15)
-          bubble.opacity = Math.min(bubble.opacity, 0.5); // Opacidade máxima aumentada: era 0.35
+        if (bubble.opacity >= (Math.random() * 0.2 + 0.3)) {
+          bubble.opacity = Math.min(bubble.opacity, 0.5);
           bubble.isFadingIn = false;
         }
       } else {
@@ -192,10 +192,9 @@ const GameArea: React.FC<GameAreaProps> = ({
       if (!animationFrameIdRef.current) {
         animateBubbles();
       }
-    } else if (animationFrameIdRef.current) { // Se o jogo está ativo ou não estamos no fallback
+    } else if (animationFrameIdRef.current) {
       cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
-       // Se estamos no fallback e o jogo começou, desenha o fundo estático uma vez
       if (isFallbackActiveRef.current && isGameActive && ctx && canvas) {
         ctx.clearRect(0,0,canvas.width, canvas.height);
         drawFallbackBackground(ctx, canvas);
@@ -258,7 +257,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.globalCompositeOperation = originalCompositeOperation;
 
     const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS;
-    const newCleanedAmount = cleanedPixels + cleanedAreaThisStroke * 0.25; // Ajustado fator de progresso para equilibrar com a área
+    const newCleanedAmount = cleanedPixels + cleanedAreaThisStroke * 0.06; // Diminuído de 0.08 para 0.06
     setCleanedPixels(newCleanedAmount);
 
     const progress = Math.min(100, (newCleanedAmount / totalPixelsToCleanRef.current) * 100);
@@ -321,4 +320,3 @@ const GameArea: React.FC<GameAreaProps> = ({
 };
 
 export default GameArea;
-
