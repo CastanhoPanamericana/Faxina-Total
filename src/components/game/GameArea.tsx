@@ -5,7 +5,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 
-const SPONGE_RADIUS = 50;
+const SPONGE_RADIUS = 50; // Aumentado de 30 para 50
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 
@@ -45,7 +45,7 @@ const GameArea: React.FC<GameAreaProps> = ({
   const spongeRef = useRef<HTMLImageElement>(null);
   const [isCleaning, setIsCleaning] = useState(false);
   const [cleanedPixels, setCleanedPixels] = useState(0);
-  const totalPixelsToCleanRef = useRef<number>(CANVAS_WIDTH * CANVAS_HEIGHT); // Total canvas area
+  const totalPixelsToCleanRef = useRef<number>(CANVAS_WIDTH * CANVAS_HEIGHT); 
 
   const bubblesRef = useRef<Bubble[]>([]);
   const animationFrameIdRef = useRef<number | null>(null);
@@ -58,19 +58,19 @@ const GameArea: React.FC<GameAreaProps> = ({
 
   const initializeBubbles = useCallback((canvas: HTMLCanvasElement) => {
     const newBubbles: Bubble[] = [];
-    const numBubbles = 40;
+    const numBubbles = 30; // Reduzido para performance e estética
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = Math.random() * 20 + 10; // Max radius 10-30
-      const minR = Math.random() * 5 + 3;   // Min radius 3-8
+      const maxR = Math.random() * 15 + 8; 
+      const minR = Math.random() * 4 + 2;   
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: minR,
         maxRadius: maxR,
         minRadius: minR,
-        growthSpeed: Math.random() * 0.1 + 0.05, // Slower growth: 0.05 to 0.15
+        growthSpeed: Math.random() * 0.04 + 0.01, // Mais lento: 0.01 a 0.05
         opacity: 0,
-        opacitySpeed: Math.random() * 0.01 + 0.005, // Fade speed: 0.005 to 0.015
+        opacitySpeed: Math.random() * 0.004 + 0.001, // Mais lento: 0.001 a 0.005
         isGrowing: true,
         isFadingIn: true,
       });
@@ -88,8 +88,9 @@ const GameArea: React.FC<GameAreaProps> = ({
       return;
     }
 
+    // Limpa apenas a área do canvas de sujeira
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawFallbackBackground(ctx, canvas);
+    drawFallbackBackground(ctx, canvas); // Redesenha o fundo marrom
 
     bubblesRef.current.forEach(bubble => {
       if (bubble.isGrowing) {
@@ -108,8 +109,8 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.25 + 0.2)) { // Max opacity 0.2 to 0.45
-          bubble.opacity = Math.min(bubble.opacity, 0.45);
+        if (bubble.opacity >= (Math.random() * 0.2 + 0.15)) { 
+          bubble.opacity = Math.min(bubble.opacity, 0.35);
           bubble.isFadingIn = false;
         }
       } else {
@@ -117,6 +118,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         if (bubble.opacity <= 0) {
           bubble.opacity = 0;
           bubble.isFadingIn = true;
+          // Reposiciona a bolha para um novo ciclo
           bubble.x = Math.random() * canvas.width;
           bubble.y = Math.random() * canvas.height;
           bubble.radius = bubble.minRadius;
@@ -124,14 +126,22 @@ const GameArea: React.FC<GameAreaProps> = ({
         }
       }
       
-      ctx.fillStyle = `rgba(101, 67, 33, ${bubble.opacity})`;
+      ctx.fillStyle = `rgba(101, 67, 33, ${bubble.opacity})`; // Cor da bolha um pouco mais escura/diferente
       ctx.beginPath();
       ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
       ctx.fill();
     });
-
-    animationFrameIdRef.current = requestAnimationFrame(animateBubbles);
-  }, [drawFallbackBackground]);
+    
+    // Continua a animação apenas se o fallback estiver ativo E o jogo não estiver ativo
+    if (isFallbackActiveRef.current && !isGameActive) {
+        animationFrameIdRef.current = requestAnimationFrame(animateBubbles);
+    } else {
+        if (animationFrameIdRef.current) {
+            cancelAnimationFrame(animationFrameIdRef.current);
+            animationFrameIdRef.current = null;
+        }
+    }
+  }, [drawFallbackBackground, isGameActive, initializeBubbles]); // Adicionado initializeBubbles e isGameActive
 
   const drawDirtyImage = useCallback(() => {
     const canvas = canvasRef.current;
@@ -141,12 +151,17 @@ const GameArea: React.FC<GameAreaProps> = ({
         cancelAnimationFrame(animationFrameIdRef.current);
         animationFrameIdRef.current = null;
       }
-      isFallbackActiveRef.current = false;
+      isFallbackActiveRef.current = false; // Reseta o fallback
 
       const img = new window.Image();
       img.crossOrigin = "anonymous";
       img.src = dirtyImageSrc;
       img.onload = () => {
+        isFallbackActiveRef.current = false;
+        if (animationFrameIdRef.current) { // Para animação se uma imagem real carregar
+            cancelAnimationFrame(animationFrameIdRef.current);
+            animationFrameIdRef.current = null;
+        }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         setCleanedPixels(0);
@@ -155,21 +170,42 @@ const GameArea: React.FC<GameAreaProps> = ({
       img.onerror = () => {
         isFallbackActiveRef.current = true;
         initializeBubbles(canvas);
-        animateBubbles(); // Start animation if fallback is active
+        drawFallbackBackground(ctx,canvas); // Desenha o fundo estático uma vez
+        if (!isGameActive) { // Inicia a animação apenas se o jogo não estiver ativo
+          animateBubbles(); 
+        }
         setCleanedPixels(0);
         onProgressUpdate(0);
       }
     }
-  }, [dirtyImageSrc, onProgressUpdate, initializeBubbles, animateBubbles]);
+  }, [dirtyImageSrc, onProgressUpdate, initializeBubbles, animateBubbles, drawFallbackBackground, isGameActive]);
   
   useEffect(() => {
-    drawDirtyImage();
+    drawDirtyImage(); // Esta função agora lida com o início da animação condicionalmente
+
+    // Cleanup para parar a animação se o componente for desmontado ou as dependências mudarem
     return () => {
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
+        animationFrameIdRef.current = null;
       }
     };
-  }, [drawDirtyImage, resetCanvas]); // resetCanvas will trigger redraw
+  }, [drawDirtyImage, resetCanvas]); // A dependência de isGameActive foi movida para dentro da lógica de animateBubbles e drawDirtyImage
+
+
+  useEffect(() => {
+    // Lógica para iniciar/parar a animação baseada em isGameActive e isFallbackActiveRef
+    if (isFallbackActiveRef.current && !isGameActive) {
+      if (!animationFrameIdRef.current) { // Evita múltiplas chamadas se já estiver animando
+        animateBubbles();
+      }
+    } else if (animationFrameIdRef.current) {
+      // Se o jogo começou ou o fallback não está ativo, para a animação
+      cancelAnimationFrame(animationFrameIdRef.current);
+      animationFrameIdRef.current = null;
+    }
+  }, [isGameActive, animateBubbles]); // isFallbackActiveRef.current não é um estado, não precisa estar aqui. animateBubbles é memoizado.
+
 
   const handleInteractionStart = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isGameActive) return;
@@ -207,7 +243,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     sponge.style.top = `${y - SPONGE_RADIUS}px`;
     sponge.style.display = 'block';
 
-    if (isCleaning && isGameActive) { // Ensure game is active for cleaning
+    if (isCleaning && isGameActive) { 
       cleanArea(x, y);
     }
   };
@@ -224,15 +260,15 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.fill();
     ctx.globalCompositeOperation = originalCompositeOperation;
     
-    // Approximation of cleaned area
     const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS;
-    const newCleanedAmount = cleanedPixels + cleanedAreaThisStroke * 0.05; // Small factor to make it more gradual
+    // Reduzido o fator para exigir mais limpeza para progredir
+    const newCleanedAmount = cleanedPixels + cleanedAreaThisStroke * 0.02; 
     setCleanedPixels(newCleanedAmount);
     
     const progress = Math.min(100, (newCleanedAmount / totalPixelsToCleanRef.current) * 100);
     onProgressUpdate(progress);
 
-    if (progress >= 100) { // Check for 100%
+    if (progress >= 100) { 
       onCleaningComplete();
     }
   };
@@ -243,7 +279,7 @@ const GameArea: React.FC<GameAreaProps> = ({
 
     const handleMouseLeave = () => {
       if (sponge) sponge.style.display = 'none';
-      setIsCleaning(false); // Stop cleaning if mouse leaves area
+      setIsCleaning(false); 
     }
     if (gameAreaDiv) {
        gameAreaDiv.addEventListener('mouseleave', handleMouseLeave);
@@ -289,3 +325,5 @@ const GameArea: React.FC<GameAreaProps> = ({
 };
 
 export default GameArea;
+
+    
