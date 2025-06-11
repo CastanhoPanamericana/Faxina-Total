@@ -22,7 +22,7 @@ export default function CleanSweepPage() {
   const [score, setScore] = useState(0);
   const [resetCanvasKey, setResetCanvasKey] = useState(0);
 
-  // URLs das imagens - podem ser alteradas por inputs do usuário no futuro
+  // URLs das imagens - usando placehold.co para consistência
   const [dirtyImage, setDirtyImage] = useState("https://placehold.co/800x600.png");
   const [cleanImage, setCleanImage] = useState("https://placehold.co/800x600.png");
   const [spongeImage, setSpongeImage] = useState("https://placehold.co/100x100.png");

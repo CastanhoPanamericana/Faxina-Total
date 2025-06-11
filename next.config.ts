@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'bufalloinox.com.br', // Adicionado hostname para a imagem da esponja
+        hostname: 'rodrigocastanho.com',
         port: '',
         pathname: '/**',
       }
