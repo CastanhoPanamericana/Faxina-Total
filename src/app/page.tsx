@@ -12,7 +12,7 @@ import Image from 'next/image';
 
 
 const INITIAL_TIME = 60; // 60 segundos
-const CLEAN_THRESHOLD = 99; // 99% para vencer
+const CLEAN_THRESHOLD = 100; // Alterado para 100% para vencer
 
 type GameState = 'idle' | 'playing' | 'won' | 'lost';
 
@@ -23,11 +23,11 @@ export default function CleanSweepPage() {
   const [resetCanvasKey, setResetCanvasKey] = useState(0);
 
   // URLs das imagens
-  const [dirtyImage, setDirtyImage] = useState(""); // Alterado para string vazia para acionar o fallback
+  const [dirtyImage, setDirtyImage] = useState(""); // Fundo marrom com bolhas animadas será o fallback
   const [cleanImage, setCleanImage] = useState("https://rodrigocastanho.com/_testes/piaLimpa.jpg");
   const [spongeImage, setSpongeImage] = useState("https://bufalloinox.com.br/wp-content/uploads/2021/11/esponja-de-aco-inox.png");
 
-  const dirtyImageAiHint = "fundo marrom sujeira"; // Atualizado para refletir o fallback
+  const dirtyImageAiHint = "cozinha suja pia";
   const cleanImageAiHint = "pia cozinha limpa";
   const spongeImageAiHint = "esponja limpeza";
 
@@ -48,7 +48,7 @@ export default function CleanSweepPage() {
     setTimeLeft(INITIAL_TIME);
     setScore(0);
     setGameState('playing');
-    setResetCanvasKey(prev => prev + 1); 
+    setResetCanvasKey(prev => prev + 1);
   };
 
   const handleProgressUpdate = useCallback((progress: number) => {
@@ -56,13 +56,13 @@ export default function CleanSweepPage() {
     if (progress >= CLEAN_THRESHOLD && gameState === 'playing') {
       setGameState('won');
     }
-  }, [gameState]);
+  }, [gameState, CLEAN_THRESHOLD]);
 
   const handleCleaningComplete = useCallback(() => {
      if (gameState === 'playing' && score >= CLEAN_THRESHOLD) {
        setGameState('won');
      }
-  }, [gameState, score]);
+  }, [gameState, score, CLEAN_THRESHOLD]);
 
   const closeModalAndReset = () => {
     setGameState('idle');
@@ -91,7 +91,7 @@ export default function CleanSweepPage() {
           )}
           <ScoreDisplay score={score} />
         </div>
-        
+
         <GameArea
           key={resetCanvasKey}
           onProgressUpdate={handleProgressUpdate}
@@ -100,13 +100,12 @@ export default function CleanSweepPage() {
           cleanImageSrc={cleanImage}
           spongeImageSrc={spongeImage}
           isGameActive={gameState === 'playing'}
-          resetCanvas={resetCanvasKey > 0}
+          resetCanvas={resetCanvasKey > 0} // Usado para forçar o useEffect em GameArea
         />
         {/* Placeholder for the Image components required by the linter. Not visually rendered over game. */}
-        <Image src={dirtyImage} alt="Superfície Suja" width={1} height={1} className="hidden" data-ai-hint={dirtyImageAiHint}/>
+        <Image src={dirtyImage || "https://placehold.co/1x1.png"} alt="Superfície Suja" width={1} height={1} className="hidden" data-ai-hint={dirtyImageAiHint}/>
         <Image src={cleanImage} alt="Superfície Limpa" width={1} height={1} className="hidden" data-ai-hint={cleanImageAiHint}/>
         <Image src={spongeImage} alt="Esponja" width={1} height={1} className="hidden" data-ai-hint={spongeImageAiHint}/>
-
 
       </main>
 
@@ -124,11 +123,10 @@ export default function CleanSweepPage() {
         description="Ah, não! Seu tempo acabou. Mais sorte da próxima vez!"
         isWin={false}
       />
-      
+
       <footer className="mt-12 text-center text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} Desafio Faxina Total. Esfregue com vontade!</p>
       </footer>
     </div>
   );
 }
-
