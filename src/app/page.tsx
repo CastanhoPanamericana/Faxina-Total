@@ -24,8 +24,8 @@ export default function CleanSweepPage() {
 
   // URLs das imagens - usando placehold.co para consistência
   const [dirtyImage, setDirtyImage] = useState("https://placehold.co/800x600.png");
-  const [cleanImage, setCleanImage] = useState("https://placehold.co/800x600.png");
-  const [spongeImage, setSpongeImage] = useState("https://placehold.co/100x100.png");
+  const [cleanImage, setCleanImage] = useState("https://rodrigocastanho.com/_testes/piaLimpa.jpg");
+  const [spongeImage, setSpongeImage] = useState("https://bufalloinox.com.br/wp-content/uploads/2021/11/esponja-de-aco-inox.png");
 
   const dirtyImageAiHint = "cozinha suja desenho";
   const cleanImageAiHint = "cozinha limpa desenho";
