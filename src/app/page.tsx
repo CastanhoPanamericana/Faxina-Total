@@ -12,7 +12,7 @@ import Image from 'next/image';
 
 
 const INITIAL_TIME = 60; // 60 segundos
-const CLEAN_THRESHOLD = 100; // Alterado para 100% para vencer
+const CLEAN_THRESHOLD = 100; // Precisa limpar 100% para vencer
 
 type GameState = 'idle' | 'playing' | 'won' | 'lost';
 
@@ -70,22 +70,22 @@ export default function CleanSweepPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 sm:p-8 font-body">
-      <header className="mb-8 text-center">
-        <h1 className="text-5xl font-headline text-primary drop-shadow-md">Desafio Faxina Total</h1>
-        <p className="text-lg text-foreground mt-2">Limpe a bagunça antes que o tempo acabe!</p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 sm:p-6 md:p-8 font-body">
+      <header className="mb-6 md:mb-8 text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-headline text-primary drop-shadow-md">Desafio Faxina Total</h1>
+        <p className="text-base sm:text-lg text-foreground mt-2">Limpe a bagunça antes que o tempo acabe!</p>
       </header>
 
-      <main className="w-full max-w-4xl bg-card p-6 rounded-xl shadow-2xl">
+      <main className="w-full max-w-4xl bg-card p-4 sm:p-6 rounded-xl shadow-2xl">
         <div className="flex flex-col sm:flex-row justify-around items-center mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
           <TimerDisplay timeLeft={timeLeft} />
           {gameState === 'idle' && (
-            <Button onClick={startGame} size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md animate-pulse">
+            <Button onClick={startGame} size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md animate-pulse w-full sm:w-auto">
               <PlayIcon className="mr-2 h-6 w-6" /> Começar Jogo
             </Button>
           )}
           { (gameState === 'playing' || gameState === 'won' || gameState === 'lost') && (
-             <Button onClick={startGame} size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 shadow-md">
+             <Button onClick={startGame} size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 shadow-md w-full sm:w-auto">
               <RotateCcwIcon className="mr-2 h-6 w-6" /> Reiniciar Jogo
             </Button>
           )}
@@ -100,7 +100,7 @@ export default function CleanSweepPage() {
           cleanImageSrc={cleanImage}
           spongeImageSrc={spongeImage}
           isGameActive={gameState === 'playing'}
-          resetCanvas={resetCanvasKey > 0} // Usado para forçar o useEffect em GameArea
+          resetCanvas={resetCanvasKey > 0}
         />
         {/* Placeholder for the Image components required by the linter. Not visually rendered over game. */}
         <Image src={dirtyImage || "https://placehold.co/1x1.png"} alt="Superfície Suja" width={1} height={1} className="hidden" data-ai-hint={dirtyImageAiHint}/>
@@ -124,7 +124,7 @@ export default function CleanSweepPage() {
         isWin={false}
       />
 
-      <footer className="mt-12 text-center text-sm text-muted-foreground">
+      <footer className="mt-8 md:mt-12 text-center text-xs sm:text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} Desafio Faxina Total. Esfregue com vontade!</p>
       </footer>
     </div>
