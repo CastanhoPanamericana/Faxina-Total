@@ -74,7 +74,7 @@ const GameArea: React.FC<GameAreaProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const spongeRef = useRef<HTMLImageElement>(null);
   const [isCleaning, setIsCleaning] = useState(false);
-  const cleanedPixelsRef = useRef<number>(0); // Use ref for direct updates
+  const cleanedPixelsRef = useRef<number>(0); 
   const totalPixelsToCleanRef = useRef<number>(CANVAS_WIDTH * CANVAS_HEIGHT);
 
   const bubblesRef = useRef<Bubble[]>([]);
@@ -88,19 +88,19 @@ const GameArea: React.FC<GameAreaProps> = ({
 
   const initializeBubbles = useCallback((canvas: HTMLCanvasElement) => {
     const newBubbles: Bubble[] = [];
-    const numBubbles = 30; 
+    const numBubbles = 20; // Reduced for performance, and larger bubbles cover more area
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = Math.random() * 160 + 60; 
-      const minR = Math.random() * 50 + 30;  
+      const maxR = Math.random() * 200 + 100; // Increased max radius (was 160 + 60)
+      const minR = Math.random() * 100 + 60;  // Increased min radius (was 50 + 30)
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: minR,
         maxRadius: maxR,
         minRadius: minR,
-        growthSpeed: Math.random() * 0.010 + 0.005, 
+        growthSpeed: Math.random() * 0.005 + 0.002, // Slower growth (was 0.010 + 0.005)
         opacity: 0,
-        opacitySpeed: Math.random() * 0.0010 + 0.0002, 
+        opacitySpeed: Math.random() * 0.0005 + 0.0001, // Slower opacity change (was 0.0010 + 0.0002)
         isGrowing: true,
         isFadingIn: true,
       });
@@ -147,14 +147,14 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.5 + 0.6)) { 
+        if (bubble.opacity >= (Math.random() * 0.3 + 0.7)) { // Increased base opacity (was 0.5 + 0.6)
           bubble.opacity = Math.min(bubble.opacity, 1); 
           bubble.isFadingIn = false;
         }
       } else {
         bubble.opacity -= bubble.opacitySpeed;
-        if (bubble.opacity <= 0) {
-          bubble.opacity = 0;
+        if (bubble.opacity <= 0.1) { // Don't fade completely
+          bubble.opacity = 0.1;
           bubble.isFadingIn = true;
           bubble.x = Math.random() * canvas.width;
           bubble.y = Math.random() * canvas.height;
@@ -166,7 +166,7 @@ const GameArea: React.FC<GameAreaProps> = ({
       if (baseRgb) {
         ctx.fillStyle = `rgba(${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}, ${bubble.opacity})`;
       } else {
-        ctx.fillStyle = `rgba(50, 50, 50, ${bubble.opacity})`; // Fallback bubble color
+        ctx.fillStyle = `rgba(50, 50, 50, ${bubble.opacity})`; 
       }
       ctx.beginPath();
       ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
@@ -175,7 +175,7 @@ const GameArea: React.FC<GameAreaProps> = ({
 
     animationFrameIdRef.current = requestAnimationFrame(animateBubbles);
 
-  }, [drawFallbackBackground, isGameActive, initializeBubbles]);
+  }, [drawFallbackBackground, isGameActive, bubbleBaseColorForFill]);
 
 
   const drawDirtyImage = useCallback(() => {
@@ -253,7 +253,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         drawFallbackBackground(ctx, canvas);
       }
     }
-  }, [isGameActive, animateBubbles, drawFallbackBackground]);
+  }, [isGameActive, animateBubbles, drawFallbackBackground, initializeBubbles]);
 
 
   const handleInteractionStart = (e: React.MouseEvent | React.TouchEvent) => {
@@ -293,7 +293,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     const canvasX = displayX * scaleX;
     const canvasY = displayY * scaleY;
     
-    const spongeDisplaySize = SPONGE_RADIUS * 2 / Math.min(scaleX, scaleY); // Adjust sponge visual size for responsiveness
+    const spongeDisplaySize = SPONGE_RADIUS * 2 / Math.min(scaleX, scaleY);
 
     sponge.style.width = `${spongeDisplaySize}px`;
     sponge.style.height = `${spongeDisplaySize}px`;
@@ -319,7 +319,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.globalCompositeOperation = originalCompositeOperation;
 
     const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS; 
-    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 0.02; 
+    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 0.2; // Aumentado de 0.02 para 0.2
     cleanedPixelsRef.current = newCleanedAmount;
 
     const progress = Math.min(100, (newCleanedAmount / totalPixelsToCleanRef.current) * 100);
