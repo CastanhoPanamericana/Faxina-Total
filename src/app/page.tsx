@@ -23,11 +23,11 @@ export default function CleanSweepPage() {
   const [resetCanvasKey, setResetCanvasKey] = useState(0);
 
   // URLs das imagens
-  const [dirtyImage, setDirtyImage] = useState("https://rodrigocastanho.com/_testes/piaSuja.jpg");
+  const [dirtyImage, setDirtyImage] = useState(""); // Alterado para string vazia para acionar o fallback
   const [cleanImage, setCleanImage] = useState("https://rodrigocastanho.com/_testes/piaLimpa.jpg");
   const [spongeImage, setSpongeImage] = useState("https://bufalloinox.com.br/wp-content/uploads/2021/11/esponja-de-aco-inox.png");
 
-  const dirtyImageAiHint = "pia cozinha suja";
+  const dirtyImageAiHint = "fundo marrom sujeira"; // Atualizado para refletir o fallback
   const cleanImageAiHint = "pia cozinha limpa";
   const spongeImageAiHint = "esponja limpeza";
 
