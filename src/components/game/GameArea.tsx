@@ -46,7 +46,7 @@ const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
 
 const darkenColor = (hexColor: string, percent: number): string => {
   const rgb = hexToRgb(hexColor);
-  if (!rgb) return '#323232'; // Fallback dark gray if parsing fails
+  if (!rgb) return '#323232'; 
 
   const factor = 1 - percent / 100;
   const r = Math.max(0, Math.floor(rgb.r * factor));
@@ -319,7 +319,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.globalCompositeOperation = originalCompositeOperation;
 
     const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS; 
-    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 0.6;
+    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 0.9;
     cleanedPixelsRef.current = newCleanedAmount;
 
     const progress = Math.min(100, (newCleanedAmount / totalPixelsToCleanRef.current) * 100);
