@@ -23,11 +23,11 @@ export default function CleanSweepPage() {
   const [resetCanvasKey, setResetCanvasKey] = useState(0);
 
   // URLs das imagens - podem ser alteradas por inputs do usuário no futuro
-  const [dirtyImage, setDirtyImage] = useState("https://placehold.co/800x600/8B4513/FFFFFF.png?text=Cozinha+Sujismunda");
-  const [cleanImage, setCleanImage] = useState("https://placehold.co/800x600/ADD8E6/000000.png?text=Cozinha+Limpinha");
-  const [spongeImage, setSpongeImage] = useState("https://placehold.co/100x100/FFD700/000000.png?text=E");
+  const [dirtyImage, setDirtyImage] = useState("https://placehold.co/800x600.png");
+  const [cleanImage, setCleanImage] = useState("https://placehold.co/800x600.png");
+  const [spongeImage, setSpongeImage] = useState("https://placehold.co/100x100.png");
 
-  const dirtyImageAiHint = "cozinha baguncada desenho";
+  const dirtyImageAiHint = "cozinha suja desenho";
   const cleanImageAiHint = "cozinha limpa desenho";
   const spongeImageAiHint = "esponja cozinha";
 
