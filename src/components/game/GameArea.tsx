@@ -60,17 +60,17 @@ const GameArea: React.FC<GameAreaProps> = ({
     const newBubbles: Bubble[] = [];
     const numBubbles = 30;
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = Math.random() * 15 + 8;
-      const minR = Math.random() * 4 + 2;
+      const maxR = Math.random() * 30 + 16; // Aumentado: era Math.random() * 15 + 8
+      const minR = Math.random() * 8 + 4;   // Aumentado: era Math.random() * 4 + 2
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: minR,
         maxRadius: maxR,
         minRadius: minR,
-        growthSpeed: Math.random() * 0.1 + 0.05, // Ajustado para ser mais visível
+        growthSpeed: Math.random() * 0.05 + 0.025, // Mais lento: era Math.random() * 0.1 + 0.05
         opacity: 0,
-        opacitySpeed: Math.random() * 0.01 + 0.002, // Ajustado para ser mais visível
+        opacitySpeed: Math.random() * 0.005 + 0.001, // Mais lento: era Math.random() * 0.01 + 0.002
         isGrowing: true,
         isFadingIn: true,
       });
@@ -82,7 +82,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
 
-    if (!ctx || !canvas || !isFallbackActiveRef.current) {
+    if (!ctx || !canvas || !isFallbackActiveRef.current || isGameActive) {
       if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
       return;
@@ -108,8 +108,8 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.2 + 0.15)) {
-          bubble.opacity = Math.min(bubble.opacity, 0.35);
+        if (bubble.opacity >= (Math.random() * 0.2 + 0.3)) { // Opacidade aumentada: era (Math.random() * 0.2 + 0.15)
+          bubble.opacity = Math.min(bubble.opacity, 0.5); // Opacidade máxima aumentada: era 0.35
           bubble.isFadingIn = false;
         }
       } else {
@@ -130,15 +130,10 @@ const GameArea: React.FC<GameAreaProps> = ({
       ctx.fill();
     });
 
-    if (isFallbackActiveRef.current && !isGameActive) {
-        animationFrameIdRef.current = requestAnimationFrame(animateBubbles);
-    } else {
-        if (animationFrameIdRef.current) {
-            cancelAnimationFrame(animationFrameIdRef.current);
-            animationFrameIdRef.current = null;
-        }
-    }
+    animationFrameIdRef.current = requestAnimationFrame(animateBubbles);
+
   }, [drawFallbackBackground, isGameActive]);
+
 
   const drawDirtyImage = useCallback(() => {
     const canvas = canvasRef.current;
@@ -170,7 +165,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         drawFallbackBackground(ctx,canvas);
         setCleanedPixels(0);
         onProgressUpdate(0);
-        if (!isGameActive) { // Inicia animação apenas se o jogo não estiver ativo e fallback
+        if (!isGameActive) {
           if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
           animateBubbles();
         }
@@ -197,16 +192,14 @@ const GameArea: React.FC<GameAreaProps> = ({
       if (!animationFrameIdRef.current) {
         animateBubbles();
       }
-    } else if (animationFrameIdRef.current) {
+    } else if (animationFrameIdRef.current) { // Se o jogo está ativo ou não estamos no fallback
       cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
-      // Se o jogo começou e estamos em fallback, precisamos desenhar o fundo estático uma vez
-      // A função drawDirtyImage, chamada pelo resetCanvas, já deve cuidar disso.
-      // No entanto, se o resetCanvas não for suficiente, poderíamos adicionar aqui:
-      // if (isFallbackActiveRef.current && isGameActive && ctx && canvas) {
-      //   ctx.clearRect(0,0,canvas.width, canvas.height); // Limpa resquícios da animação
-      //   drawFallbackBackground(ctx, canvas); // Desenha o fundo marrom estático
-      // }
+       // Se estamos no fallback e o jogo começou, desenha o fundo estático uma vez
+      if (isFallbackActiveRef.current && isGameActive && ctx && canvas) {
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        drawFallbackBackground(ctx, canvas);
+      }
     }
   }, [isGameActive, animateBubbles, drawFallbackBackground]);
 
@@ -265,7 +258,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.globalCompositeOperation = originalCompositeOperation;
 
     const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS;
-    const newCleanedAmount = cleanedPixels + cleanedAreaThisStroke * 0.15; // Ajustado fator de progresso
+    const newCleanedAmount = cleanedPixels + cleanedAreaThisStroke * 0.25; // Ajustado fator de progresso para equilibrar com a área
     setCleanedPixels(newCleanedAmount);
 
     const progress = Math.min(100, (newCleanedAmount / totalPixelsToCleanRef.current) * 100);
@@ -328,3 +321,4 @@ const GameArea: React.FC<GameAreaProps> = ({
 };
 
 export default GameArea;
+
