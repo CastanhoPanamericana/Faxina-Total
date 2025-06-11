@@ -20,10 +20,18 @@ interface ModalProps {
   title: string;
   description: string;
   isWin: boolean;
+  level?: number; // Adicionado para lógica de níveis
 }
 
-const GameStatusModal: React.FC<ModalProps> = ({ isOpen, onClose, title, description, isWin }) => {
+const GameStatusModal: React.FC<ModalProps> = ({ isOpen, onClose, title, description, isWin, level }) => {
   if (!isOpen) return null;
+
+  const buttonText = () => {
+    if (isWin) {
+      return "Próximo Nível";
+    }
+    return "Tentar Novamente";
+  };
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
@@ -44,7 +52,7 @@ const GameStatusModal: React.FC<ModalProps> = ({ isOpen, onClose, title, descrip
         <AlertDialogFooter className="mt-4">
           <AlertDialogAction asChild>
             <Button onClick={onClose} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-              {isWin ? "Jogar Novamente" : "Tentar Novamente"}
+              {buttonText()}
             </Button>
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -54,3 +62,5 @@ const GameStatusModal: React.FC<ModalProps> = ({ isOpen, onClose, title, descrip
 };
 
 export default GameStatusModal;
+
+    
