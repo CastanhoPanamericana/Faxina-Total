@@ -88,19 +88,19 @@ const GameArea: React.FC<GameAreaProps> = ({
 
   const initializeBubbles = useCallback((canvas: HTMLCanvasElement) => {
     const newBubbles: Bubble[] = [];
-    const numBubbles = 30;
+    const numBubbles = 30; 
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = Math.random() * 80 + 30; // Increased size
-      const minR = Math.random() * 25 + 15;  // Increased size
+      const maxR = Math.random() * 160 + 60; 
+      const minR = Math.random() * 50 + 30;  
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: minR,
         maxRadius: maxR,
         minRadius: minR,
-        growthSpeed: Math.random() * 0.015 + 0.008, // Slower animation
+        growthSpeed: Math.random() * 0.010 + 0.005, 
         opacity: 0,
-        opacitySpeed: Math.random() * 0.0015 + 0.0003, // Slower opacity change
+        opacitySpeed: Math.random() * 0.0010 + 0.0002, 
         isGrowing: true,
         isFadingIn: true,
       });
@@ -147,8 +147,8 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.4 + 0.5)) { // Slightly more visible
-          bubble.opacity = Math.min(bubble.opacity, 0.9);
+        if (bubble.opacity >= (Math.random() * 0.5 + 0.6)) { 
+          bubble.opacity = Math.min(bubble.opacity, 1); 
           bubble.isFadingIn = false;
         }
       } else {
@@ -187,8 +187,10 @@ const GameArea: React.FC<GameAreaProps> = ({
         animationFrameIdRef.current = null;
       }
       isFallbackActiveRef.current = false;
-      cleanedPixelsRef.current = 0; // Reset cleaned pixels
+      cleanedPixelsRef.current = 0; 
       onProgressUpdate(0);
+      totalPixelsToCleanRef.current = canvas.width * canvas.height;
+
 
       if (!dirtyImageSrc) {
         isFallbackActiveRef.current = true;
@@ -222,7 +224,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         }
       }
     }
-  }, [dirtyImageSrc, onProgressUpdate, initializeBubbles, animateBubbles, drawFallbackBackground, isGameActive]);
+  }, [dirtyImageSrc, onProgressUpdate, initializeBubbles, animateBubbles, drawFallbackBackground, isGameActive, currentDirtColor]);
 
   useEffect(() => {
     drawDirtyImage();
@@ -232,7 +234,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         animationFrameIdRef.current = null;
       }
     };
-  }, [drawDirtyImage, resetCanvas, currentDirtColor]); // Added currentDirtColor to re-trigger if color changes
+  }, [drawDirtyImage, resetCanvas, currentDirtColor]); 
 
 
   useEffect(() => {
@@ -291,7 +293,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     const canvasX = displayX * scaleX;
     const canvasY = displayY * scaleY;
     
-    const spongeDisplaySize = SPONGE_RADIUS * 2 / scaleX; // Scale sponge visual size for responsiveness
+    const spongeDisplaySize = SPONGE_RADIUS * 2 / Math.min(scaleX, scaleY); // Adjust sponge visual size for responsiveness
 
     sponge.style.width = `${spongeDisplaySize}px`;
     sponge.style.height = `${spongeDisplaySize}px`;
@@ -316,9 +318,8 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.fill();
     ctx.globalCompositeOperation = originalCompositeOperation;
 
-    const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS;
-    // Increased multiplier significantly for better mobile progress
-    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 0.1; 
+    const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS; 
+    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 0.02; 
     cleanedPixelsRef.current = newCleanedAmount;
 
     const progress = Math.min(100, (newCleanedAmount / totalPixelsToCleanRef.current) * 100);
@@ -369,10 +370,10 @@ const GameArea: React.FC<GameAreaProps> = ({
         ref={spongeRef}
         src={spongeImageSrc}
         alt="Esponja"
-        width={SPONGE_RADIUS * 2} // Initial width, will be overridden by style
-        height={SPONGE_RADIUS * 2} // Initial height, will be overridden by style
+        width={SPONGE_RADIUS * 2} 
+        height={SPONGE_RADIUS * 2} 
         className="absolute pointer-events-none hidden"
-        style={{ objectFit: 'contain' }} // Changed to contain to prevent distortion
+        style={{ objectFit: 'contain' }} 
         draggable="false"
         data-ai-hint="kitchen sponge"
         priority
