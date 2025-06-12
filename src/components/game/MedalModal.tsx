@@ -21,6 +21,7 @@ type GameStatus = 'levelWon' | 'lost' | 'gameOver' | 'idle' | 'playing';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void; // Primary action: Verify Phrase / Next Level / Try Again / Play Again
+  onSecondaryAction?: (status: GameStatus) => void; // Optional: For "Fechar" or alternative actions
   title: string;
   description: string;
   status: GameStatus; 
@@ -28,12 +29,13 @@ interface ModalProps {
   userInputPhrase?: string;
   onPhraseChange?: (value: string) => void;
   showPhraseError?: boolean;
-  expectedPhrase?: string | null; // For display or internal logic if needed
+  expectedPhrase?: string | null; 
 }
 
 const GameStatusModal: React.FC<ModalProps> = ({ 
   isOpen, 
   onClose, 
+  onSecondaryAction,
   title, 
   description, 
   status, 
@@ -49,19 +51,32 @@ const GameStatusModal: React.FC<ModalProps> = ({
     if (status === 'levelWon') return "Verificar Frase";
     if (status === 'lost') return `Tentar Nível ${level} Novamente`;
     if (status === 'gameOver') return "Jogar Novamente";
-    return "Continuar"; // Default, should ideally not be hit with current logic
+    return "Continuar"; 
   };
 
   const IconComponent = () => {
     if (status === 'levelWon') return <HelpCircleIcon className="w-16 h-16 sm:w-20 sm:h-20 text-blue-500 animate-pop" />;
     if (status === 'lost') return <XCircleIcon className="w-16 h-16 sm:w-20 sm:h-20 text-destructive animate-pop" />;
     if (status === 'gameOver') return <CheckCircleIcon className="w-16 h-16 sm:w-20 sm:h-20 text-green-500 animate-pop" />;
-    return <MedalIcon className="w-16 h-16 sm:w-20 sm:h-20 text-accent animate-pop" />; // Fallback
+    return <MedalIcon className="w-16 h-16 sm:w-20 sm:h-20 text-accent animate-pop" />; 
   };
   
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // Se o modal está sendo fechado por clique fora ou Esc
+      if (status === 'levelWon' && onSecondaryAction) {
+        // Permite que o pai decida o que fazer ao fechar o modal de 'levelWon'
+        // Por exemplo, não fazer nada ou limpar a frase.
+        // onSecondaryAction(status); // Poderia chamar aqui se necessário
+      } else {
+        onClose(); // Chama a ação principal de fechamento para outros status
+      }
+    }
+  };
+
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => { if (!open && status !== 'levelWon') onClose(); /* Allow programmatic close for levelWon validation */}}>
+    <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
       <AlertDialogContent className="font-body w-[90vw] max-w-md">
         <AlertDialogHeader>
           <div className="flex justify-center mb-3 sm:mb-4">
@@ -94,14 +109,10 @@ const GameStatusModal: React.FC<ModalProps> = ({
               {getButtonText()}
             </Button>
           </AlertDialogAction>
-           {(status === 'levelWon' || status === 'lost') && (
+           {/* Botão de Fechar/Cancelar só aparece em levelWon e lost para oferecer uma saída sem ser a ação principal */}
+           {(status === 'levelWon' || status === 'lost') && onSecondaryAction && (
              <AlertDialogCancel asChild>
-               <Button variant="outline" onClick={() => {
-                 if(onPhraseChange) onPhraseChange(""); // Clear phrase input on cancel
-                 // For lost, onClose is restart, so this cancel would be "go to idle" or similar.
-                 // Let's make cancel close modal without specific action for now
-                 // Handled by onOpenChange if user clicks outside or presses Esc
-               }} className="w-full sm:w-auto">
+               <Button variant="outline" onClick={() => onSecondaryAction(status)} className="w-full sm:w-auto">
                  Fechar
                </Button>
              </AlertDialogCancel>
@@ -113,3 +124,5 @@ const GameStatusModal: React.FC<ModalProps> = ({
 };
 
 export default GameStatusModal;
+
+    

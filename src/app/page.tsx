@@ -16,7 +16,12 @@ const LEVEL_TIME_DECREMENT = 5;
 const MIN_TIME_LIMIT = 10; 
 const MAX_LEVELS = 3;
 
-const DIRT_COLORS = ['#8B4513', '#7A3D12', '#693310', '#582A0E', '#47210C', '#6B8E23', '#556B2F', '#8FBC8F', '#2E8B57', '#3CB371'];
+// Definindo cores específicas para os níveis
+const LEVEL_SPECIFIC_DIRT_COLORS = [
+  '#8B4513', // Nível 1: Marrom
+  '#006400', // Nível 2: Verde Escuro
+  '#8B0000', // Nível 3: Vermelho Escuro
+];
 
 interface LevelDefinition {
   levelNumber: number;
@@ -47,7 +52,7 @@ const generateLevelConfigs = (): LevelDefinition[] => {
       ...detail,
       levelNumber,
       time: calculateTimeForLevel(levelNumber),
-      dirtColor: DIRT_COLORS[index % DIRT_COLORS.length],
+      dirtColor: LEVEL_SPECIFIC_DIRT_COLORS[index] || '#8B4513', // Fallback para marrom se não houver cor definida
     };
   });
 };
@@ -68,11 +73,11 @@ export default function CleanSweepPage() {
   const [userInputPhrase, setUserInputPhrase] = useState("");
   const [showPhraseError, setShowPhraseError] = useState(false);
 
-  const dirtyImageFallback = ""; // To trigger fallback dirt color
+  const dirtyImageFallback = ""; 
   const [spongeImage, setSpongeImage] = useState("https://bufalloinox.com.br/wp-content/uploads/2021/11/esponja-de-aco-inox.png");
 
   const dirtyImageAiHint = "fundo sujeira abstrato";
-  const cleanImageAiHint = "produto limpeza bombril"; // Generic hint for changing images
+  const cleanImageAiHint = "produto limpeza bombril"; 
   const spongeImageAiHint = "esponja limpeza";
 
 
@@ -81,6 +86,7 @@ export default function CleanSweepPage() {
     setTimeLeft(currentLevelConfig.time);
     setCurrentDirtColor(currentLevelConfig.dirtColor);
     setCurrentCleanImageSrc(currentLevelConfig.cleanImageSrc);
+    setResetCanvasKey(prev => prev + 1); // Forçar recriação do canvas com nova cor/imagem
   }, [currentLevelIndex]);
 
   useEffect(() => {
@@ -101,8 +107,7 @@ export default function CleanSweepPage() {
     setUserInputPhrase("");
     setShowPhraseError(false);
     setGameState('playing');
-    setResetCanvasKey(prev => prev + 1);
-    // Time, dirt color, and clean image are set by the useEffect listening to currentLevelIndex
+    // setResetCanvasKey(prev => prev + 1); // Movido para o useEffect de currentLevelIndex
   }, []);
 
   const handleProgressUpdate = useCallback((progress: number) => {
@@ -110,7 +115,7 @@ export default function CleanSweepPage() {
     if (progress >= CLEAN_THRESHOLD && gameState === 'playing') {
       setGameState('levelWon');
     }
-  }, [gameState, CLEAN_THRESHOLD]);
+  }, [gameState]);
   
   const normalizePhrase = (phrase: string) => phrase.toLowerCase().trim().replace(/\s+/g, ' ');
 
@@ -119,7 +124,11 @@ export default function CleanSweepPage() {
     if (normalizePhrase(userInputPhrase) === normalizePhrase(expectedPhrase)) {
       setShowPhraseError(false);
       if (currentLevelIndex < MAX_LEVELS - 1) {
-        handleStartOrRestart(currentLevelIndex + 1);
+        // Não chamar handleStartOrRestart aqui, apenas mudar o index e o estado
+        // O useEffect de currentLevelIndex cuidará do resto.
+        setCurrentLevelIndex(currentLevelIndex + 1);
+        setGameState('playing'); // Para permitir que o useEffect do levelIndex configure o novo nível
+        setUserInputPhrase(""); // Limpa a frase para o próximo nível
       } else {
         setGameState('gameOver');
       }
@@ -129,7 +138,7 @@ export default function CleanSweepPage() {
   };
 
   const closeModalAndRestartCurrentLevel = () => {
-    setGameState('idle'); // Go to idle, then restart
+    // setGameState('idle'); // Não precisa ir para idle, só reiniciar o nível
     handleStartOrRestart(currentLevelIndex);
   };
 
@@ -137,8 +146,7 @@ export default function CleanSweepPage() {
      setGameState('idle');
      setUserInputPhrase("");
      setShowPhraseError(false);
-     // If game over, and user clicks "Jogar Novamente", start from level 0
-     if (gameState === 'gameOver') {
+     if (gameState === 'gameOver') { // Se era game over e fechou, reseta para o nível 0
         handleStartOrRestart(0);
      }
   };
@@ -170,7 +178,15 @@ export default function CleanSweepPage() {
           )}
           { (gameState === 'playing' || gameState === 'levelWon' || gameState === 'lost' || gameState === 'gameOver') && (
              <Button 
-                onClick={() => handleStartOrRestart(gameState === 'gameOver' ? 0 : currentLevelIndex)} 
+                onClick={() => {
+                  if (gameState === 'gameOver') {
+                    handleStartOrRestart(0);
+                  } else if (gameState === 'levelWon') { // Se está em levelWon e clica em reiniciar, reinicia o nível atual
+                     handleStartOrRestart(currentLevelIndex);
+                  } else { // 'playing' ou 'lost'
+                     handleStartOrRestart(currentLevelIndex);
+                  }
+                }}
                 size="lg" 
                 variant="outline" 
                 className="border-primary text-primary hover:bg-primary/10 shadow-md w-full sm:w-auto"
@@ -186,11 +202,11 @@ export default function CleanSweepPage() {
           key={resetCanvasKey}
           onProgressUpdate={handleProgressUpdate}
           onCleaningComplete={() => { /* Covered by onProgressUpdate */ }}
-          dirtyImageSrc={dirtyImageFallback}
+          dirtyImageSrc={dirtyImageFallback} // Deve ser sempre vazio para usar fallback
           cleanImageSrc={currentCleanImageSrc}
           spongeImageSrc={spongeImage}
           isGameActive={gameState === 'playing'}
-          resetCanvas={resetCanvasKey > 0}
+          resetCanvas={resetCanvasKey > 0} // Usado para forçar o reset
           currentDirtColor={currentDirtColor}
         />
         <Image src={dirtyImageFallback || "https://placehold.co/1x1.png"} alt="Superfície Suja Fallback" width={1} height={1} className="hidden" data-ai-hint={dirtyImageAiHint}/>
@@ -201,10 +217,25 @@ export default function CleanSweepPage() {
 
       <GameStatusModal
         isOpen={gameState === 'levelWon' || gameState === 'lost' || gameState === 'gameOver'}
-        onClose={
+        onClose={ // Botão principal do modal
           gameState === 'levelWon' ? handlePhraseValidation : 
           gameState === 'lost' ? closeModalAndRestartCurrentLevel : 
-          closeModalAndGoToIdle // For Game Over "Jogar Novamente"
+          closeModalAndGoToIdle // Para Game Over "Jogar Novamente" ou fechar o modal de levelWon/lost
+        }
+        onSecondaryAction={ // Botão secundário (Fechar/Cancelar)
+          (status) => {
+            if (status === 'levelWon') { // Se está no levelWon e clica em fechar
+              setUserInputPhrase(""); 
+              setShowPhraseError(false);
+              // Não faz nada, deixa o modal aberto para tentar a frase
+            } else if (status === 'lost') { // Se perdeu e clica em fechar (em vez de tentar de novo)
+              setGameState('idle'); // Volta ao estado ocioso
+              handleStartOrRestart(currentLevelIndex); // Prepara para reiniciar o nível atual se o usuário quiser
+            } else if (status === 'gameOver') {
+              setGameState('idle');
+              handleStartOrRestart(0);
+            }
+          }
         }
         title={
           gameState === 'levelWon' ? `Nível ${currentLevelNumber} Completo!` :
@@ -230,3 +261,5 @@ export default function CleanSweepPage() {
     </div>
   );
 }
+
+    
