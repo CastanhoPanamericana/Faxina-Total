@@ -4,6 +4,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
+import { InfoIcon } from 'lucide-react';
 
 const SPONGE_RADIUS = 50;
 const CANVAS_WIDTH = 800;
@@ -17,7 +18,7 @@ interface GameAreaProps {
   cleanImageSrc: string;
   spongeImageSrc: string;
   isGameActive: boolean;
-  isIdle: boolean; // New prop for instruction overlay
+  isIdle: boolean; 
   resetCanvas: boolean;
   currentDirtColor: string;
 }
@@ -48,7 +49,7 @@ const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
 
 const darkenColor = (hexColor: string, percent: number): string => {
   const rgb = hexToRgb(hexColor);
-  if (!rgb) return '#323232';
+  if (!rgb) return '#323232'; // Fallback color
 
   const factor = 1 - percent / 100;
   const r = Math.max(0, Math.floor(rgb.r * factor));
@@ -93,17 +94,17 @@ const GameArea: React.FC<GameAreaProps> = ({
     const newBubbles: Bubble[] = [];
     const numBubbles = 20; 
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = (Math.random() * 1.5 + 1.0); // Reduced size
-      const minR = (Math.random() * 0.5 + 0.5);  // Reduced size
+      const maxR = (Math.random() * 1.0 + 0.5); // Reduced size further
+      const minR = (Math.random() * 0.25 + 0.25);  // Reduced size further
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: minR,
         maxRadius: maxR,
         minRadius: minR,
-        growthSpeed: Math.random() * 0.0075 + 0.0025,
+        growthSpeed: Math.random() * 0.005 + 0.0015, // Slower growth
         opacity: 0,
-        opacitySpeed: Math.random() * 0.001 + 0.0001,
+        opacitySpeed: Math.random() * 0.0008 + 0.0002, // Slower opacity change
         isGrowing: true,
         isFadingIn: true,
       });
@@ -114,25 +115,34 @@ const GameArea: React.FC<GameAreaProps> = ({
   const bubbleBaseColorForFill = useRef<string>('#323232');
 
   useEffect(() => {
-    bubbleBaseColorForFill.current = darkenColor(currentDirtColor, 75); // Darker bubbles
+    bubbleBaseColorForFill.current = darkenColor(currentDirtColor, 75); 
   }, [currentDirtColor]);
 
 
   const animateBubbles = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
-
-    if (!ctx || !canvas || !isFallbackActiveRef.current || isGameActive) {
+  
+    if (!ctx || !canvas || !isFallbackActiveRef.current) {
       if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
       return;
     }
-
+    // If the game is active, we don't want bubble animations on top of the cleaning layer
+    if (isGameActive) {
+        if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
+        animationFrameIdRef.current = null;
+        // Ensure the static dirt background is drawn if the game just started
+        // ctx.clearRect(0, 0, canvas.width, canvas.height); // This might clear too much if called repeatedly
+        // drawFallbackBackground(ctx, canvas); // This could be redundant if drawn elsewhere
+        return;
+    }
+  
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawFallbackBackground(ctx, canvas);
-
+  
     const baseRgb = hexToRgb(bubbleBaseColorForFill.current);
-
+  
     bubblesRef.current.forEach(bubble => {
       if (bubble.isGrowing) {
         bubble.radius += bubble.growthSpeed;
@@ -147,7 +157,7 @@ const GameArea: React.FC<GameAreaProps> = ({
           bubble.isGrowing = true;
         }
       }
-
+  
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
         if (bubble.opacity >= (Math.random() * 0.2 + 0.6)) { 
@@ -161,19 +171,19 @@ const GameArea: React.FC<GameAreaProps> = ({
           bubble.isFadingIn = true;
         }
       }
-
+  
       if (baseRgb) {
         ctx.fillStyle = `rgba(${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}, ${bubble.opacity})`;
       } else {
-        ctx.fillStyle = `rgba(10, 10, 10, ${bubble.opacity})`;
+        ctx.fillStyle = `rgba(10, 10, 10, ${bubble.opacity})`; // Fallback bubble color
       }
       ctx.beginPath();
       ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
       ctx.fill();
     });
-
+  
     animationFrameIdRef.current = requestAnimationFrame(animateBubbles);
-
+  
   }, [drawFallbackBackground, isGameActive, bubbleBaseColorForFill]);
 
 
@@ -193,11 +203,14 @@ const GameArea: React.FC<GameAreaProps> = ({
       isFallbackActiveRef.current = true;
       initializeBubbles(canvas);
       drawFallbackBackground(ctx, canvas);
-      if (!isGameActive) {
+      
+      // Start animations if idle or not actively playing (e.g. initial state)
+      // but only if fallback is active.
+      if (isFallbackActiveRef.current && (isIdle || !isGameActive)) {
         animateBubbles();
       }
     }
-  }, [onProgressUpdate, initializeBubbles, animateBubbles, drawFallbackBackground, isGameActive, currentDirtColor]);
+  }, [onProgressUpdate, initializeBubbles, animateBubbles, drawFallbackBackground, isGameActive, isIdle, currentDirtColor]);
 
 
   useEffect(() => {
@@ -215,19 +228,21 @@ const GameArea: React.FC<GameAreaProps> = ({
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
 
-    if (isFallbackActiveRef.current && !isGameActive && ctx && canvas) {
-      if (!animationFrameIdRef.current) {
-        animateBubbles();
-      }
-    } else if (animationFrameIdRef.current && (isGameActive || !isFallbackActiveRef.current)) {
-      cancelAnimationFrame(animationFrameIdRef.current);
-      animationFrameIdRef.current = null;
-      if (isFallbackActiveRef.current && isGameActive && ctx && canvas) {
-        ctx.clearRect(0,0,canvas.width, canvas.height);
-        drawFallbackBackground(ctx, canvas);
+    if (ctx && canvas) {
+      if (isFallbackActiveRef.current && (isIdle || (!isGameActive && !isIdle))) { // Animate if idle or in a non-playing state (like level won, lost) with fallback
+        if (!animationFrameIdRef.current && !isGameActive) { // Ensure not to start if game is active
+            animateBubbles();
+        }
+      } else if (animationFrameIdRef.current && (isGameActive || !isFallbackActiveRef.current)) { // Stop if game active or fallback not active
+        cancelAnimationFrame(animationFrameIdRef.current);
+        animationFrameIdRef.current = null;
+        if (isFallbackActiveRef.current && isGameActive) { // If game just became active, clear bubbles & draw static
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            drawFallbackBackground(ctx, canvas);
+        }
       }
     }
-  }, [isGameActive, animateBubbles, drawFallbackBackground, currentDirtColor]);
+  }, [isIdle, isGameActive, animateBubbles, drawFallbackBackground, currentDirtColor]);
 
 
   const handleInteractionStart = (e: React.MouseEvent | React.TouchEvent) => {
@@ -243,7 +258,7 @@ const GameArea: React.FC<GameAreaProps> = ({
   };
 
   const moveSponge = (e: React.MouseEvent | React.TouchEvent) => {
-    if (isIdle) return; // Prevent sponge movement when instructions are shown
+    if (isIdle) return; 
     const canvas = canvasRef.current;
     const sponge = spongeRef.current;
     if (!canvas || !sponge) return;
@@ -341,7 +356,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
         className="absolute top-0 left-0 w-full h-full"
-        style={{ opacity: 0.95 }} // Increased opacity
+        style={{ opacity: 0.95 }}
       />
       <Image
         ref={spongeRef}
@@ -349,8 +364,8 @@ const GameArea: React.FC<GameAreaProps> = ({
         alt="Esponja"
         width={SPONGE_RADIUS * 2}
         height={SPONGE_RADIUS * 2}
-        className="absolute pointer-events-none" // Display is handled by moveSponge
-        style={{ objectFit: 'contain', display: 'none', zIndex: 5 }} // Ensure sponge is above canvas
+        className="absolute pointer-events-none" 
+        style={{ objectFit: 'contain', display: 'none', zIndex: 5 }} 
         draggable="false"
         data-ai-hint="kitchen sponge"
         priority
@@ -358,13 +373,14 @@ const GameArea: React.FC<GameAreaProps> = ({
       {isIdle && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm p-4 z-20 rounded-lg">
           <div className="bg-card/95 p-4 sm:p-6 rounded-lg shadow-xl max-w-sm sm:max-w-md text-center border border-primary">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-2 sm:mb-3">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-2 sm:mb-3 flex items-center justify-center">
+              <InfoIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 text-primary" />
               Instruções do Jogo
             </h2>
             <p className="text-xs sm:text-sm text-foreground">
               Limpe a sujeira arrastando a esponja. Ao final de cada nível, digite a{' '}
               <strong className="font-semibold text-accent">frase secreta</strong>{' '}
-              para avançar. Anote as frases!
+              para avançar. Anote as frases para não esquecer!
             </p>
           </div>
         </div>

@@ -86,6 +86,8 @@ export default function CleanSweepPage() {
     setCurrentDirtColor(currentLevelConfig.dirtColor);
     setCurrentCleanImageSrc(currentLevelConfig.cleanImageSrc);
     setResetCanvasKey(prev => prev + 1); 
+    setUserInputPhrase("");
+    setShowPhraseError(false);
   }, [currentLevelIndex]);
 
   useEffect(() => {
@@ -124,7 +126,6 @@ export default function CleanSweepPage() {
       if (currentLevelIndex < MAX_LEVELS - 1) {
         setCurrentLevelIndex(currentLevelIndex + 1);
         setGameState('playing'); 
-        setUserInputPhrase(""); 
       } else {
         setGameState('gameOver');
       }
@@ -139,8 +140,6 @@ export default function CleanSweepPage() {
 
   const closeModalAndGoToIdle = () => {
      setGameState('idle');
-     setUserInputPhrase("");
-     setShowPhraseError(false);
      if (gameState === 'gameOver') { 
         handleStartOrRestart(0);
      }
@@ -158,9 +157,9 @@ export default function CleanSweepPage() {
         <Image 
           src="https://incentivobombril.com.br/imagens/logoGema01.png" 
           alt="Logo Desafio Faxina Total" 
-          width={200} 
-          height={80} 
-          className="mx-auto h-12 sm:h-16 md:h-20 w-auto object-contain"
+          width={400} 
+          height={160} 
+          className="mx-auto h-24 sm:h-32 md:h-40 w-auto object-contain"
           priority
           data-ai-hint="game logo"
         />
@@ -177,7 +176,11 @@ export default function CleanSweepPage() {
           
           <div className="flex justify-center w-full">
             {gameState === 'idle' && (
-              <Button onClick={initialGameStart} size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md animate-pulse whitespace-nowrap w-full max-w-xs">
+              <Button 
+                onClick={initialGameStart} 
+                size="lg" 
+                className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md animate-pulse whitespace-nowrap w-full h-[calc(theme(spacing.11)_+_1rem)] sm:h-[calc(theme(spacing.11)_+_1.5rem)] flex items-center justify-center text-base sm:text-lg"
+              >
                 <PlayIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> Começar Jogo
               </Button>
             )}
@@ -192,7 +195,7 @@ export default function CleanSweepPage() {
                   }}
                   size="lg" 
                   variant="outline" 
-                  className="border-primary text-primary hover:bg-primary/10 shadow-md whitespace-nowrap w-full max-w-xs"
+                  className="border-primary text-primary hover:bg-primary/10 shadow-md whitespace-nowrap w-full h-[calc(theme(spacing.11)_+_1rem)] sm:h-[calc(theme(spacing.11)_+_1.5rem)] flex items-center justify-center text-base sm:text-lg"
                >
                 <RotateCcwIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> 
                 {gameState === 'gameOver' ? 'Jogar Novamente' : `Reiniciar Nível ${currentLevelNumber}`}
@@ -234,8 +237,6 @@ export default function CleanSweepPage() {
           (status) => {
             if (status === 'levelWon') { 
               handleStartOrRestart(currentLevelIndex);
-              setUserInputPhrase(""); 
-              setShowPhraseError(false);
             } else if (status === 'lost') { 
               setGameState('idle'); 
             } else if (status === 'gameOver') {
