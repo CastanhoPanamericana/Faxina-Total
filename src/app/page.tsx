@@ -10,44 +10,78 @@ import { Button } from '@/components/ui/button';
 import { PlayIcon, RotateCcwIcon } from 'lucide-react';
 import Image from 'next/image';
 
-const BASE_INITIAL_TIME = 60; // 60 segundos base
-const CLEAN_THRESHOLD = 100; // Precisa limpar 100% para vencer
-const LEVEL_TIME_DECREMENT = 3; // Segundos a menos por nível
-const MIN_TIME_LIMIT = 15; // Tempo mínimo para um nível
+const BASE_INITIAL_TIME = 60; 
+const CLEAN_THRESHOLD = 100; 
+const LEVEL_TIME_DECREMENT = 5; 
+const MIN_TIME_LIMIT = 10; 
+const MAX_LEVELS = 3;
 
 const DIRT_COLORS = ['#8B4513', '#7A3D12', '#693310', '#582A0E', '#47210C', '#6B8E23', '#556B2F', '#8FBC8F', '#2E8B57', '#3CB371'];
 
+interface LevelDefinition {
+  levelNumber: number;
+  cleanImageSrc: string;
+  unlockPhrase: string;
+  time: number;
+  dirtColor: string;
+}
 
-type GameState = 'idle' | 'playing' | 'won' | 'lost';
+const levelDetails: Omit<LevelDefinition, 'time' | 'levelNumber' | 'dirtColor'>[] = [
+  { cleanImageSrc: "http://incentivobombril.com.br/imagens/bombrilgame01.jpeg", unlockPhrase: "Não machuca as mãos" },
+  { cleanImageSrc: "http://incentivobombril.com.br/imagens/bombrilgame02.jpeg", unlockPhrase: "sinônimo de categoria" },
+  { cleanImageSrc: "http://incentivobombril.com.br/imagens/bombrilgame03.jpeg", unlockPhrase: "esponja de aço é bombril" },
+];
+
+const calculateTimeForLevel = (level: number): number => {
+  if (level === 1) {
+    return Math.floor(BASE_INITIAL_TIME * 0.7); // 30% reduction for level 1
+  }
+  const timeAfterDecrement = Math.floor(BASE_INITIAL_TIME * 0.7) - (level - 1) * LEVEL_TIME_DECREMENT;
+  return Math.max(MIN_TIME_LIMIT, timeAfterDecrement);
+};
+
+const generateLevelConfigs = (): LevelDefinition[] => {
+  return levelDetails.map((detail, index) => {
+    const levelNumber = index + 1;
+    return {
+      ...detail,
+      levelNumber,
+      time: calculateTimeForLevel(levelNumber),
+      dirtColor: DIRT_COLORS[index % DIRT_COLORS.length],
+    };
+  });
+};
+
+const levelConfigs = generateLevelConfigs();
+
+type GameState = 'idle' | 'playing' | 'levelWon' | 'lost' | 'gameOver';
 
 export default function CleanSweepPage() {
   const [gameState, setGameState] = useState<GameState>('idle');
-  const [timeLeft, setTimeLeft] = useState(Math.floor(BASE_INITIAL_TIME * 0.7));
+  const [timeLeft, setTimeLeft] = useState(levelConfigs[0].time);
   const [score, setScore] = useState(0);
   const [resetCanvasKey, setResetCanvasKey] = useState(0);
-  const [level, setLevel] = useState(1);
-  const [currentDirtColor, setCurrentDirtColor] = useState(DIRT_COLORS[0]);
+  const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+  
+  const [currentDirtColor, setCurrentDirtColor] = useState(levelConfigs[0].dirtColor);
+  const [currentCleanImageSrc, setCurrentCleanImageSrc] = useState(levelConfigs[0].cleanImageSrc);
+  const [userInputPhrase, setUserInputPhrase] = useState("");
+  const [showPhraseError, setShowPhraseError] = useState(false);
 
-  // URLs das imagens - Mantidas para referência, mas a 'dirtyImage' está vazia para usar o fallback
-  const [dirtyImage, setDirtyImage] = useState(""); // Usará o fallback com cor e bolhas
-  const [cleanImage, setCleanImage] = useState("https://rodrigocastanho.com/_testes/piaLimpa.jpg");
+  const dirtyImageFallback = ""; // To trigger fallback dirt color
   const [spongeImage, setSpongeImage] = useState("https://bufalloinox.com.br/wp-content/uploads/2021/11/esponja-de-aco-inox.png");
 
-  const dirtyImageAiHint = "fundo sujeira abstrato"; // Alterado para refletir o fallback
-  const cleanImageAiHint = "pia cozinha limpa";
+  const dirtyImageAiHint = "fundo sujeira abstrato";
+  const cleanImageAiHint = "produto limpeza bombril"; // Generic hint for changing images
   const spongeImageAiHint = "esponja limpeza";
 
-  const calculateTimeForLevel = useCallback((lvl: number) => {
-    if (lvl === 1) {
-      return Math.floor(BASE_INITIAL_TIME * 0.7);
-    }
-    const timeAfterDecrement = Math.floor(BASE_INITIAL_TIME * 0.7) - (lvl - 1) * LEVEL_TIME_DECREMENT;
-    return Math.max(MIN_TIME_LIMIT, timeAfterDecrement);
-  }, []);
 
-  const getColorForLevel = useCallback((lvl: number) => {
-    return DIRT_COLORS[(lvl - 1) % DIRT_COLORS.length];
-  }, []);
+  useEffect(() => {
+    const currentLevelConfig = levelConfigs[currentLevelIndex];
+    setTimeLeft(currentLevelConfig.time);
+    setCurrentDirtColor(currentLevelConfig.dirtColor);
+    setCurrentCleanImageSrc(currentLevelConfig.cleanImageSrc);
+  }, [currentLevelIndex]);
 
   useEffect(() => {
     let timerId: NodeJS.Timeout;
@@ -61,49 +95,69 @@ export default function CleanSweepPage() {
     return () => clearInterval(timerId);
   }, [gameState, timeLeft]);
 
-  const handleStartOrRestart = useCallback((targetLevel: number) => {
-    setLevel(targetLevel);
-    setTimeLeft(calculateTimeForLevel(targetLevel));
-    setCurrentDirtColor(getColorForLevel(targetLevel));
+  const handleStartOrRestart = useCallback((targetLevelIndex: number) => {
+    setCurrentLevelIndex(targetLevelIndex);
     setScore(0);
+    setUserInputPhrase("");
+    setShowPhraseError(false);
     setGameState('playing');
     setResetCanvasKey(prev => prev + 1);
-  }, [calculateTimeForLevel, getColorForLevel]);
-
+    // Time, dirt color, and clean image are set by the useEffect listening to currentLevelIndex
+  }, []);
 
   const handleProgressUpdate = useCallback((progress: number) => {
     setScore(progress);
     if (progress >= CLEAN_THRESHOLD && gameState === 'playing') {
-      setGameState('won');
+      setGameState('levelWon');
     }
   }, [gameState, CLEAN_THRESHOLD]);
+  
+  const normalizePhrase = (phrase: string) => phrase.toLowerCase().trim().replace(/\s+/g, ' ');
 
-  const handleCleaningComplete = useCallback(() => {
-     if (gameState === 'playing' && score >= CLEAN_THRESHOLD) {
-       setGameState('won');
-     }
-  }, [gameState, score, CLEAN_THRESHOLD]);
-
-  const closeWinModalAndAdvance = () => {
-    setGameState('idle');
-    handleStartOrRestart(level + 1); // Avança para o próximo nível
+  const handlePhraseValidation = () => {
+    const expectedPhrase = levelConfigs[currentLevelIndex].unlockPhrase;
+    if (normalizePhrase(userInputPhrase) === normalizePhrase(expectedPhrase)) {
+      setShowPhraseError(false);
+      if (currentLevelIndex < MAX_LEVELS - 1) {
+        handleStartOrRestart(currentLevelIndex + 1);
+      } else {
+        setGameState('gameOver');
+      }
+    } else {
+      setShowPhraseError(true);
+    }
   };
 
   const closeModalAndRestartCurrentLevel = () => {
-    setGameState('idle');
-    handleStartOrRestart(level); // Reinicia o nível atual
+    setGameState('idle'); // Go to idle, then restart
+    handleStartOrRestart(currentLevelIndex);
+  };
+
+  const closeModalAndGoToIdle = () => {
+     setGameState('idle');
+     setUserInputPhrase("");
+     setShowPhraseError(false);
+     // If game over, and user clicks "Jogar Novamente", start from level 0
+     if (gameState === 'gameOver') {
+        handleStartOrRestart(0);
+     }
   };
   
   const initialGameStart = () => {
-    handleStartOrRestart(1); // Começa sempre do nível 1
+    handleStartOrRestart(0); 
   };
 
+  const currentLevelNumber = levelConfigs[currentLevelIndex].levelNumber;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 sm:p-6 md:p-8 font-body">
       <header className="mb-4 md:mb-6 text-center">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-headline text-primary drop-shadow-md">Desafio Faxina Total</h1>
-        <p className="text-base sm:text-lg text-foreground mt-1 sm:mt-2">Nível: {level} - Limpe a bagunça antes que o tempo acabe!</p>
+        {gameState !== 'gameOver' && (
+          <p className="text-base sm:text-lg text-foreground mt-1 sm:mt-2">
+            Nível: {currentLevelNumber} - Limpe a bagunça antes que o tempo acabe!
+          </p>
+        )}
       </header>
 
       <main className="w-full max-w-4xl bg-card p-3 sm:p-6 rounded-xl shadow-2xl">
@@ -114,9 +168,15 @@ export default function CleanSweepPage() {
               <PlayIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> Começar Jogo
             </Button>
           )}
-          { (gameState === 'playing' || gameState === 'won' || gameState === 'lost') && (
-             <Button onClick={() => handleStartOrRestart(level)} size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 shadow-md w-full sm:w-auto">
-              <RotateCcwIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> Reiniciar Nível
+          { (gameState === 'playing' || gameState === 'levelWon' || gameState === 'lost' || gameState === 'gameOver') && (
+             <Button 
+                onClick={() => handleStartOrRestart(gameState === 'gameOver' ? 0 : currentLevelIndex)} 
+                size="lg" 
+                variant="outline" 
+                className="border-primary text-primary hover:bg-primary/10 shadow-md w-full sm:w-auto"
+             >
+              <RotateCcwIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> 
+              {gameState === 'gameOver' ? 'Jogar Novamente' : `Reiniciar Nível ${currentLevelNumber}`}
             </Button>
           )}
           <ScoreDisplay score={score} />
@@ -125,36 +185,43 @@ export default function CleanSweepPage() {
         <GameArea
           key={resetCanvasKey}
           onProgressUpdate={handleProgressUpdate}
-          onCleaningComplete={handleCleaningComplete}
-          dirtyImageSrc={dirtyImage}
-          cleanImageSrc={cleanImage}
+          onCleaningComplete={() => { /* Covered by onProgressUpdate */ }}
+          dirtyImageSrc={dirtyImageFallback}
+          cleanImageSrc={currentCleanImageSrc}
           spongeImageSrc={spongeImage}
           isGameActive={gameState === 'playing'}
           resetCanvas={resetCanvasKey > 0}
           currentDirtColor={currentDirtColor}
         />
-        {/* Placeholder for the Image components. Not visually rendered over game. */}
-        <Image src={dirtyImage || "https://placehold.co/1x1.png"} alt="Superfície Suja" width={1} height={1} className="hidden" data-ai-hint={dirtyImageAiHint}/>
-        <Image src={cleanImage} alt="Superfície Limpa" width={1} height={1} className="hidden" data-ai-hint={cleanImageAiHint}/>
+        <Image src={dirtyImageFallback || "https://placehold.co/1x1.png"} alt="Superfície Suja Fallback" width={1} height={1} className="hidden" data-ai-hint={dirtyImageAiHint}/>
+        <Image src={currentCleanImageSrc} alt="Superfície Limpa Nível Atual" width={1} height={1} className="hidden" data-ai-hint={cleanImageAiHint}/>
         <Image src={spongeImage} alt="Esponja" width={1} height={1} className="hidden" data-ai-hint={spongeImageAiHint}/>
 
       </main>
 
       <GameStatusModal
-        isOpen={gameState === 'won'}
-        onClose={closeWinModalAndAdvance}
-        title={`Nível ${level} Completo!`}
-        description={`Parabéns! Você limpou tudo! Preparado para o Nível ${level + 1}?`}
-        isWin={true}
-        level={level}
-      />
-      <GameStatusModal
-        isOpen={gameState === 'lost'}
-        onClose={closeModalAndRestartCurrentLevel}
-        title="Tempo Esgotado!"
-        description="Ah, não! Seu tempo acabou. Tente novamente este nível!"
-        isWin={false}
-        level={level}
+        isOpen={gameState === 'levelWon' || gameState === 'lost' || gameState === 'gameOver'}
+        onClose={
+          gameState === 'levelWon' ? handlePhraseValidation : 
+          gameState === 'lost' ? closeModalAndRestartCurrentLevel : 
+          closeModalAndGoToIdle // For Game Over "Jogar Novamente"
+        }
+        title={
+          gameState === 'levelWon' ? `Nível ${currentLevelNumber} Completo!` :
+          gameState === 'lost' ? "Tempo Esgotado!" :
+          "Parabéns!"
+        }
+        description={
+          gameState === 'levelWon' ? `Digite a frase secreta para desbloquear o próximo nível:` :
+          gameState === 'lost' ? `Ah, não! Seu tempo acabou. Tente novamente o nível ${currentLevelNumber}!` :
+          "Você sabe tudo de Bombril!"
+        }
+        status={gameState}
+        level={currentLevelNumber}
+        userInputPhrase={userInputPhrase}
+        onPhraseChange={setUserInputPhrase}
+        showPhraseError={showPhraseError}
+        expectedPhrase={gameState === 'levelWon' ? levelConfigs[currentLevelIndex].unlockPhrase : null}
       />
 
       <footer className="mt-6 md:mt-10 text-center text-xs sm:text-sm text-muted-foreground">
@@ -163,5 +230,3 @@ export default function CleanSweepPage() {
     </div>
   );
 }
-
-    

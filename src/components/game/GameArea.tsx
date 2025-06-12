@@ -12,12 +12,12 @@ const CANVAS_HEIGHT = 600;
 interface GameAreaProps {
   onProgressUpdate: (progress: number) => void;
   onCleaningComplete: () => void;
-  dirtyImageSrc: string;
-  cleanImageSrc: string;
+  dirtyImageSrc: string; // Will be empty to use fallback
+  cleanImageSrc: string; // Dynamic per level
   spongeImageSrc: string;
   isGameActive: boolean;
   resetCanvas: boolean;
-  currentDirtColor: string;
+  currentDirtColor: string; // Dynamic per level
 }
 
 interface Bubble {
@@ -64,7 +64,7 @@ const darkenColor = (hexColor: string, percent: number): string => {
 const GameArea: React.FC<GameAreaProps> = ({
   onProgressUpdate,
   onCleaningComplete,
-  dirtyImageSrc,
+  dirtyImageSrc, 
   cleanImageSrc,
   spongeImageSrc,
   isGameActive,
@@ -82,6 +82,8 @@ const GameArea: React.FC<GameAreaProps> = ({
   const isFallbackActiveRef = useRef<boolean>(false);
 
   const drawFallbackBackground = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+    // The canvas element itself will have opacity: 0.5 and mix-blend-mode: multiply.
+    // So, draw the color at full opacity here.
     ctx.fillStyle = currentDirtColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, [currentDirtColor]);
@@ -90,17 +92,17 @@ const GameArea: React.FC<GameAreaProps> = ({
     const newBubbles: Bubble[] = [];
     const numBubbles = 20; 
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = Math.random() * 20 + 60; 
-      const minR = Math.random() * 10 + 30;  
+      const maxR = Math.random() * 40 + 120; // Increased size
+      const minR = Math.random() * 20 + 60;  // Increased size
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: minR,
         maxRadius: maxR,
         minRadius: minR,
-        growthSpeed: Math.random() * 0.05 + 0.02, 
+        growthSpeed: Math.random() * 0.03 + 0.01, // Slower animation
         opacity: 0,
-        opacitySpeed: Math.random() * 0.005 + 0.001, 
+        opacitySpeed: Math.random() * 0.003 + 0.0005, // Slower animation
         isGrowing: true,
         isFadingIn: true,
       });
@@ -111,7 +113,7 @@ const GameArea: React.FC<GameAreaProps> = ({
   const bubbleBaseColorForFill = useRef<string>('#323232');
 
   useEffect(() => {
-    bubbleBaseColorForFill.current = darkenColor(currentDirtColor, 60);
+    bubbleBaseColorForFill.current = darkenColor(currentDirtColor, 30); // Less dark for more visibility
   }, [currentDirtColor]);
 
 
@@ -124,8 +126,11 @@ const GameArea: React.FC<GameAreaProps> = ({
       animationFrameIdRef.current = null;
       return;
     }
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Clear only if not using multiply blend on the canvas element itself for the dirt layer.
+    // If canvas element has opacity & blend, this clearRect will erase blended output.
+    // We want to redraw the dirt layer (fallback) each frame.
+    ctx.clearRect(0, 0, canvas.width, canvas.height); 
     drawFallbackBackground(ctx, canvas);
     
     const baseRgb = hexToRgb(bubbleBaseColorForFill.current);
@@ -147,19 +152,19 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.3 + 0.4)) { 
-          bubble.opacity = Math.min(bubble.opacity, 0.7); 
+        if (bubble.opacity >= (Math.random() * 0.4 + 0.5)) { // More visible bubbles
+          bubble.opacity = Math.min(bubble.opacity, 0.9); 
           bubble.isFadingIn = false;
         }
       } else {
         bubble.opacity -= bubble.opacitySpeed;
-        if (bubble.opacity <= 0.1) { 
-          bubble.opacity = 0.1;
+        if (bubble.opacity <= 0.2) { // Remain slightly visible
+          bubble.opacity = 0.2;
           bubble.isFadingIn = true;
-          bubble.x = Math.random() * canvas.width;
-          bubble.y = Math.random() * canvas.height;
-          bubble.radius = bubble.minRadius;
-          bubble.isGrowing = true;
+          // bubble.x = Math.random() * canvas.width; // Keep bubbles in place unless they reset
+          // bubble.y = Math.random() * canvas.height;
+          // bubble.radius = bubble.minRadius;
+          // bubble.isGrowing = true;
         }
       }
       
@@ -178,7 +183,7 @@ const GameArea: React.FC<GameAreaProps> = ({
   }, [drawFallbackBackground, isGameActive, bubbleBaseColorForFill, initializeBubbles]);
 
 
-  const drawDirtyImage = useCallback(() => {
+  const drawInitialCanvasContent = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (ctx && canvas) {
@@ -186,55 +191,31 @@ const GameArea: React.FC<GameAreaProps> = ({
         cancelAnimationFrame(animationFrameIdRef.current);
         animationFrameIdRef.current = null;
       }
-      isFallbackActiveRef.current = false;
+      
       cleanedPixelsRef.current = 0; 
       onProgressUpdate(0);
       totalPixelsToCleanRef.current = canvas.width * canvas.height;
 
-
-      if (!dirtyImageSrc) {
-        isFallbackActiveRef.current = true;
-        initializeBubbles(canvas);
-        drawFallbackBackground(ctx, canvas);
-        if (!isGameActive) {
-          animateBubbles();
-        }
-        return;
-      }
-
-      const img = new window.Image();
-      img.crossOrigin = "anonymous";
-      img.src = dirtyImageSrc;
-      img.onload = () => {
-        isFallbackActiveRef.current = false;
-        if (animationFrameIdRef.current) {
-            cancelAnimationFrame(animationFrameIdRef.current);
-            animationFrameIdRef.current = null;
-        }
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      };
-      img.onerror = () => {
-        isFallbackActiveRef.current = true;
-        initializeBubbles(canvas);
-        drawFallbackBackground(ctx,canvas);
-        if (!isGameActive) {
-          if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
-          animateBubbles();
-        }
+      // Always use fallback for dirt layer
+      isFallbackActiveRef.current = true;
+      initializeBubbles(canvas);
+      drawFallbackBackground(ctx, canvas);
+      if (!isGameActive) { // Only animate if game is not active (idle state)
+        animateBubbles();
       }
     }
-  }, [dirtyImageSrc, onProgressUpdate, initializeBubbles, animateBubbles, drawFallbackBackground, isGameActive, currentDirtColor]);
+  }, [onProgressUpdate, initializeBubbles, animateBubbles, drawFallbackBackground, isGameActive, currentDirtColor]);
+
 
   useEffect(() => {
-    drawDirtyImage();
+    drawInitialCanvasContent();
     return () => {
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
         animationFrameIdRef.current = null;
       }
     };
-  }, [drawDirtyImage, resetCanvas, currentDirtColor]); 
+  }, [drawInitialCanvasContent, resetCanvas, currentDirtColor]);
 
 
   useEffect(() => {
@@ -242,16 +223,18 @@ const GameArea: React.FC<GameAreaProps> = ({
     const ctx = canvas?.getContext('2d');
 
     if (isFallbackActiveRef.current && !isGameActive && ctx && canvas) {
-      if (!animationFrameIdRef.current) {
-        initializeBubbles(canvas);
+      if (!animationFrameIdRef.current) { // Start animation if not already running
+        // initializeBubbles(canvas); // Bubbles initialized in drawInitialCanvasContent
         animateBubbles();
       }
     } else if (animationFrameIdRef.current && (isGameActive || !isFallbackActiveRef.current)) {
+      // Stop animation if game becomes active or fallback is no longer needed
       cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
+      // If game became active and was using fallback, redraw static background
       if (isFallbackActiveRef.current && isGameActive && ctx && canvas) {
         ctx.clearRect(0,0,canvas.width, canvas.height);
-        drawFallbackBackground(ctx, canvas);
+        drawFallbackBackground(ctx, canvas); // Draw static dirt
       }
     }
   }, [isGameActive, animateBubbles, drawFallbackBackground, initializeBubbles, currentDirtColor]);
@@ -320,14 +303,14 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.globalCompositeOperation = originalCompositeOperation;
 
     const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS; 
-    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 0.1;
+    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 0.1; // Adjusted factor
     cleanedPixelsRef.current = newCleanedAmount;
 
-    const progress = Math.min(100, (newCleanedAmount / totalPixelsToCleanRef.current) * 100);
+    const progress = Math.min(100, (newCleanedAmount / totalPixelsToCleanRef.current) * 100 * 2.5); // Further adjustment for mobile
     onProgressUpdate(progress);
 
     if (progress >= 100) {
-      onCleaningComplete();
+      onCleaningComplete(); // This will now trigger gameState change in parent
     }
   };
 
@@ -366,6 +349,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
         className="absolute top-0 left-0 w-full h-full"
+        style={{ opacity: 0.5, mixBlendMode: 'multiply' }}
       />
       <Image
         ref={spongeRef}
@@ -384,4 +368,3 @@ const GameArea: React.FC<GameAreaProps> = ({
 };
 
 export default GameArea;
-
