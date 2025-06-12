@@ -83,7 +83,7 @@ const GameArea: React.FC<GameAreaProps> = ({
 
   const bubblesRef = useRef<Bubble[]>([]);
   const animationFrameIdRef = useRef<number | null>(null);
-  const isFallbackActiveRef = useRef<boolean>(true); // Assumes fallback is active unless image loads
+  const isFallbackActiveRef = useRef<boolean>(true); 
 
   const bubbleBaseColorForFill = useRef<string>('#323232');
 
@@ -99,19 +99,19 @@ const GameArea: React.FC<GameAreaProps> = ({
 
   const initializeBubbles = useCallback((canvas: HTMLCanvasElement) => {
     const newBubbles: Bubble[] = [];
-    const numBubbles = 30; // Increased number of bubbles
+    const numBubbles = 20; // Reduced number for larger bubbles
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = Math.random() * 15 + 10; // Radius: 10px to 25px
-      const minR = Math.random() * 5 + 2;   // Radius: 2px to 7px
+      const maxR = Math.random() * 10 + 5; // Radius: 5px to 15px (smaller)
+      const minR = Math.random() * 3 + 1;   // Radius: 1px to 4px (smaller)
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: minR,
         maxRadius: maxR,
         minRadius: minR,
-        growthSpeed: Math.random() * 0.1 + 0.05, // Faster growth
+        growthSpeed: Math.random() * 0.05 + 0.02, // Slower growth for smaller bubbles
         opacity: 0,
-        opacitySpeed: Math.random() * 0.01 + 0.005, // Faster opacity change
+        opacitySpeed: Math.random() * 0.008 + 0.003, 
         isGrowing: true,
         isFadingIn: true,
       });
@@ -123,10 +123,18 @@ const GameArea: React.FC<GameAreaProps> = ({
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
   
-    if (!ctx || !canvas || !isFallbackActiveRef.current || isGameActive) {
+    if (!ctx || !canvas || !isFallbackActiveRef.current ) { // Removed !isGameActive here to allow animation during idle
       if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
       return;
+    }
+     if (isGameActive && animationFrameIdRef.current) { // Stop animation if game becomes active
+        cancelAnimationFrame(animationFrameIdRef.current);
+        animationFrameIdRef.current = null;
+        // Ensure a static background is drawn if stopping animation for active game
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawFallbackBackground(ctx, canvas);
+        return;
     }
   
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -151,14 +159,14 @@ const GameArea: React.FC<GameAreaProps> = ({
   
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.3 + 0.5)) { // Max opacity 0.5 to 0.8
-          bubble.opacity = Math.min(bubble.opacity, 0.8); 
+        if (bubble.opacity >= (Math.random() * 0.2 + 0.3)) { 
+          bubble.opacity = Math.min(bubble.opacity, 0.5); 
           bubble.isFadingIn = false;
         }
       } else {
         bubble.opacity -= bubble.opacitySpeed;
-        if (bubble.opacity <= (Math.random() * 0.1 + 0.2)) { // Min opacity 0.2 to 0.3
-          bubble.opacity = Math.max(bubble.opacity, 0.2);
+        if (bubble.opacity <= (Math.random() * 0.05 + 0.1)) { 
+          bubble.opacity = Math.max(bubble.opacity, 0.1);
           bubble.isFadingIn = true;
         }
       }
@@ -166,7 +174,7 @@ const GameArea: React.FC<GameAreaProps> = ({
       if (baseRgb) {
         ctx.fillStyle = `rgba(${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}, ${bubble.opacity})`;
       } else {
-        ctx.fillStyle = `rgba(10, 10, 10, ${bubble.opacity})`; // Fallback bubble color
+        ctx.fillStyle = `rgba(10, 10, 10, ${bubble.opacity})`; 
       }
       ctx.beginPath();
       ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
@@ -182,7 +190,6 @@ const GameArea: React.FC<GameAreaProps> = ({
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (ctx && canvas) {
-      // Stop any existing animation before resetting
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
         animationFrameIdRef.current = null;
@@ -190,25 +197,19 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       cleanedPixelsRef.current = 0;
       onProgressUpdate(0);
-      // totalPixelsToCleanRef.current is based on fixed CANVAS_WIDTH/HEIGHT, so no need to update here
-
-      isFallbackActiveRef.current = true; // Always assume fallback is active initially
+      isFallbackActiveRef.current = true; 
       
-      // Draw static dirt background. If idle, animation useEffect will take over.
-      // If game active, this static background is what's needed.
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawFallbackBackground(ctx, canvas);
     }
   }, [onProgressUpdate, drawFallbackBackground]);
 
 
-  // Effect for initial setup and reset
   useEffect(() => {
     drawInitialCanvasSetup();
-  }, [drawInitialCanvasSetup, currentDirtColor, resetCanvas]); // resetCanvas key change forces this
+  }, [drawInitialCanvasSetup, currentDirtColor, resetCanvas]); 
 
 
-  // Effect for controlling animation and static background based on game state
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
@@ -216,22 +217,19 @@ const GameArea: React.FC<GameAreaProps> = ({
     if (!ctx || !canvas) return;
 
     if (isIdle) {
-      if (!animationFrameIdRef.current) { // If idle and no animation, start it
-        initializeBubbles(canvas); // Initialize/re-initialize bubbles
+      if (!animationFrameIdRef.current) { 
+        initializeBubbles(canvas); 
         animateBubbles();
       }
-    } else { // Not idle (playing, levelWon, lost, etc.)
-      if (animationFrameIdRef.current) { // If animation is running, stop it
+    } else { 
+      if (animationFrameIdRef.current) { 
         cancelAnimationFrame(animationFrameIdRef.current);
         animationFrameIdRef.current = null;
       }
-      // For non-idle states, ensure the static dirt background is drawn
-      // This is especially important when transitioning from idle to playing
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawFallbackBackground(ctx, canvas);
     }
 
-    // Cleanup on unmount or if dependencies change causing this to re-run before new state is processed
     return () => {
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
@@ -337,7 +335,7 @@ const GameArea: React.FC<GameAreaProps> = ({
 
   return (
     <div
-      className="relative w-full max-w-4xl aspect-[4/3] mx-auto border-2 border-primary rounded-lg shadow-lg overflow-hidden cursor-none touch-none"
+      className="relative w-full h-full cursor-none touch-none" // Removed aspect-[4/3] and explicit max-w here as parent controls it
       style={{ backgroundImage: `url(${cleanImageSrc})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
       onMouseDown={handleInteractionStart}
       onMouseUp={handleInteractionEnd}
@@ -352,7 +350,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
         className="absolute top-0 left-0 w-full h-full"
-        style={{ opacity: 0.95 }} 
+        style={{ opacity: 0.95 }} // Opacity from reference
       />
       <Image
         ref={spongeRef}
@@ -367,13 +365,13 @@ const GameArea: React.FC<GameAreaProps> = ({
         priority
       />
       {isIdle && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm p-4 z-20 rounded-lg">
-          <div className="bg-card/95 p-4 sm:p-6 rounded-lg shadow-xl max-w-sm sm:max-w-md text-center border border-primary">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-2 sm:mb-3 flex items-center justify-center">
-              <InfoIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 text-primary" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm p-4 z-20">
+          <div className="bg-blue-100/90 p-4 sm:p-6 rounded-lg shadow-xl max-w-sm sm:max-w-md text-center border border-blue-300">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-800 mb-2 sm:mb-3 flex items-center justify-center">
+              <InfoIcon className="w-6 h-6 sm:w-8 sm:h-8 mr-2 text-blue-700" />
               Instruções do Jogo
             </h2>
-            <p className="text-xs sm:text-sm text-foreground">
+            <p className="text-xs sm:text-sm text-blue-700">
               Limpe a sujeira arrastando a esponja. Ao final de cada nível, digite a{' '}
               <strong className="font-semibold text-accent">frase secreta</strong>{' '}
               para avançar. Anote as frases para não esquecer!
@@ -386,5 +384,3 @@ const GameArea: React.FC<GameAreaProps> = ({
 };
 
 export default GameArea;
-
-    

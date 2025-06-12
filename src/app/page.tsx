@@ -7,7 +7,7 @@ import TimerDisplay from '@/components/game/TimerDisplay';
 import ScoreDisplay from '@/components/game/ScoreDisplay';
 import GameStatusModal from '@/components/game/MedalModal';
 import { Button } from '@/components/ui/button';
-import { PlayIcon, RotateCcwIcon } from 'lucide-react';
+import { RotateCcwIcon } from 'lucide-react';
 import Image from 'next/image';
 
 const BASE_INITIAL_TIME = 60; 
@@ -156,12 +156,12 @@ export default function CleanSweepPage() {
       <header className="mb-4 md:mb-6 text-center">
         <Image 
           src="https://incentivobombril.com.br/imagens/logoGema01.png" 
-          alt="Logo Desafio Faxina Total" 
-          width={400} 
-          height={160} 
-          className="mx-auto h-24 sm:h-32 md:h-40 w-auto object-contain"
+          alt="Logo Game Desafio Faxina Total" 
+          width={250} // Adjusted size
+          height={100} // Adjusted size
+          className="mx-auto h-auto w-auto max-h-[100px] sm:max-h-[120px] object-contain" // Adjusted classes for responsiveness
           priority
-          data-ai-hint="game logo"
+          data-ai-hint="game logo bombril"
         />
         {gameState !== 'gameOver' && gameState !== 'idle' && (
           <p className="text-base sm:text-lg text-foreground mt-2 sm:mt-3">
@@ -170,18 +170,17 @@ export default function CleanSweepPage() {
         )}
       </header>
 
-      <main className="w-full max-w-4xl bg-card p-3 sm:p-6 rounded-xl shadow-2xl">
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center mb-4 sm:mb-6 w-full">
-          <TimerDisplay timeLeft={timeLeft} className="w-full"/>
+      <main className="w-full max-w-2xl bg-card p-3 sm:p-5 rounded-xl shadow-lg border border-border">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 items-center mb-3 sm:mb-4 w-full">
+          <TimerDisplay timeLeft={timeLeft} />
           
           <div className="flex justify-center w-full">
             {gameState === 'idle' && (
               <Button 
                 onClick={initialGameStart} 
-                size="lg" 
-                className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md animate-pulse whitespace-nowrap w-full h-[calc(theme(spacing.11)_+_1rem)] sm:h-[calc(theme(spacing.11)_+_1.5rem)] flex items-center justify-center text-base sm:text-lg font-bold"
+                className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md w-full h-12 sm:h-14 flex items-center justify-center text-lg sm:text-xl font-bold rounded-md border border-yellow-700"
               >
-                <PlayIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> Começar Jogo
+                PLAY
               </Button>
             )}
             { (gameState === 'playing' || gameState === 'levelWon' || gameState === 'lost' || gameState === 'gameOver') && (
@@ -193,19 +192,18 @@ export default function CleanSweepPage() {
                        handleStartOrRestart(currentLevelIndex);
                     }
                   }}
-                  size="lg" 
-                  variant="outline" 
-                  className="border-primary text-primary hover:bg-primary/10 shadow-md whitespace-nowrap w-full h-[calc(theme(spacing.11)_+_1rem)] sm:h-[calc(theme(spacing.11)_+_1.5rem)] flex items-center justify-center text-base sm:text-lg"
+                  variant="secondary" // Use secondary for brown style
+                  className="shadow-md whitespace-nowrap w-full h-12 sm:h-14 flex items-center justify-center text-sm sm:text-base font-semibold rounded-md border border-yellow-900"
                >
-                <RotateCcwIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> 
+                <RotateCcwIcon className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> 
                 {gameState === 'gameOver' ? 'Jogar Novamente' : `Reiniciar Nível ${currentLevelNumber}`}
               </Button>
             )}
           </div>
-          <ScoreDisplay score={score} className="w-full"/>
+          <ScoreDisplay score={score} />
         </div>
         
-        <div className="relative w-full max-w-4xl aspect-[4/3] mx-auto">
+        <div className="relative w-full max-w-2xl aspect-[4/3] mx-auto rounded-lg overflow-hidden border border-border">
             <GameArea
               key={resetCanvasKey}
               onProgressUpdate={handleProgressUpdate}
@@ -269,5 +267,3 @@ export default function CleanSweepPage() {
     </div>
   );
 }
-
-    

@@ -13,12 +13,13 @@ interface ScoreDisplayProps {
 const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, className }) => {
   return (
     <div className={cn(
-        "flex items-center justify-center space-x-2 p-3 sm:p-4 bg-secondary text-secondary-foreground rounded-lg shadow-md font-body border-2 border-primary/40",
-        "justify-self-stretch", // Ensure it stretches in a grid cell
+        "flex items-center justify-center space-x-1 sm:space-x-2 p-2 sm:p-3 bg-secondary text-secondary-foreground rounded-md shadow-md font-bold border border-yellow-900",
+        "h-12 sm:h-14 text-sm sm:text-base", // Match button height and text size
+        "justify-self-stretch", 
         className
     )}>
-      <PercentIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-      <span className="text-lg sm:text-xl font-semibold whitespace-nowrap">
+      <PercentIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+      <span className="whitespace-nowrap">
         Limpou: {Math.round(score)}%
       </span>
     </div>
