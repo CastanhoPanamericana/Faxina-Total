@@ -172,31 +172,34 @@ export default function CleanSweepPage() {
       </header>
 
       <main className="w-full max-w-4xl bg-card p-3 sm:p-6 rounded-xl shadow-2xl">
-        <div className="flex flex-col sm:flex-row justify-around items-center mb-4 sm:mb-6 space-y-3 sm:space-y-0 sm:space-x-4">
-          <TimerDisplay timeLeft={timeLeft} />
-          {gameState === 'idle' && (
-            <Button onClick={initialGameStart} size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md animate-pulse w-full sm:w-auto">
-              <PlayIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> Começar Jogo
-            </Button>
-          )}
-          { (gameState === 'playing' || gameState === 'levelWon' || gameState === 'lost' || gameState === 'gameOver') && (
-             <Button 
-                onClick={() => {
-                  if (gameState === 'gameOver') {
-                    handleStartOrRestart(0);
-                  } else { 
-                     handleStartOrRestart(currentLevelIndex);
-                  }
-                }}
-                size="lg" 
-                variant="outline" 
-                className="border-primary text-primary hover:bg-primary/10 shadow-md w-full sm:w-auto"
-             >
-              <RotateCcwIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> 
-              {gameState === 'gameOver' ? 'Jogar Novamente' : `Reiniciar Nível ${currentLevelNumber}`}
-            </Button>
-          )}
-          <ScoreDisplay score={score} />
+        <div className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:gap-4 items-center mb-4 sm:mb-6 w-full">
+          <TimerDisplay timeLeft={timeLeft} className="justify-self-start w-full"/>
+          
+          <div className="flex justify-center">
+            {gameState === 'idle' && (
+              <Button onClick={initialGameStart} size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md animate-pulse whitespace-nowrap">
+                <PlayIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> Começar Jogo
+              </Button>
+            )}
+            { (gameState === 'playing' || gameState === 'levelWon' || gameState === 'lost' || gameState === 'gameOver') && (
+               <Button 
+                  onClick={() => {
+                    if (gameState === 'gameOver') {
+                      handleStartOrRestart(0);
+                    } else { 
+                       handleStartOrRestart(currentLevelIndex);
+                    }
+                  }}
+                  size="lg" 
+                  variant="outline" 
+                  className="border-primary text-primary hover:bg-primary/10 shadow-md whitespace-nowrap"
+               >
+                <RotateCcwIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> 
+                {gameState === 'gameOver' ? 'Jogar Novamente' : `Reiniciar Nível ${currentLevelNumber}`}
+              </Button>
+            )}
+          </div>
+          <ScoreDisplay score={score} className="justify-self-end w-full"/>
         </div>
 
         <GameArea
@@ -231,7 +234,7 @@ export default function CleanSweepPage() {
               setShowPhraseError(false);
             } else if (status === 'lost') { 
               setGameState('idle'); 
-              handleStartOrRestart(currentLevelIndex); 
+              // handleStartOrRestart(currentLevelIndex); // User might want to exit not restart
             } else if (status === 'gameOver') {
               setGameState('idle');
               handleStartOrRestart(0);

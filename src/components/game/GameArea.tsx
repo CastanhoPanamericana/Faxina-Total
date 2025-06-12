@@ -8,7 +8,7 @@ import Image from 'next/image';
 const SPONGE_RADIUS = 50; 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-const CLEANING_DIFFICULTY_FACTOR = 2.0; // Higher value means more cleaning is required
+const CLEANING_DIFFICULTY_FACTOR = 4.5; // Increased difficulty
 
 interface GameAreaProps {
   onProgressUpdate: (progress: number) => void;
@@ -91,8 +91,8 @@ const GameArea: React.FC<GameAreaProps> = ({
     const newBubbles: Bubble[] = [];
     const numBubbles = 20; 
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = (Math.random() * 10 + 10); // Reduced size
-      const minR = (Math.random() * 5 + 5);  // Reduced size
+      const maxR = (Math.random() * 5 + 5); // Reduced size
+      const minR = (Math.random() * 2 + 3);  // Reduced size
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -148,7 +148,7 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.2 + 0.6)) { // Increased base opacity
+        if (bubble.opacity >= (Math.random() * 0.2 + 0.6)) { 
           bubble.opacity = Math.min(bubble.opacity, 0.8); 
           bubble.isFadingIn = false;
         }
@@ -356,4 +356,3 @@ const GameArea: React.FC<GameAreaProps> = ({
 };
 
 export default GameArea;
-
