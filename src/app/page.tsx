@@ -7,7 +7,7 @@ import TimerDisplay from '@/components/game/TimerDisplay';
 import ScoreDisplay from '@/components/game/ScoreDisplay';
 import GameStatusModal from '@/components/game/MedalModal';
 import { Button } from '@/components/ui/button';
-import { PlayIcon, RotateCcwIcon, InfoIcon } from 'lucide-react';
+import { PlayIcon, RotateCcwIcon } from 'lucide-react';
 import Image from 'next/image';
 
 const BASE_INITIAL_TIME = 60; 
@@ -155,29 +155,29 @@ export default function CleanSweepPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 sm:p-6 md:p-8 font-body">
       <header className="mb-4 md:mb-6 text-center">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-headline text-primary drop-shadow-md">Desafio Faxina Total</h1>
-        {gameState === 'idle' && (
-          <div className="mt-3 sm:mt-4 p-3 bg-primary/10 border border-primary/30 rounded-lg text-sm sm:text-base text-foreground shadow">
-            <InfoIcon className="inline-block mr-2 h-5 w-5 text-primary" />
-            Prepare-se para uma faxina desafiadora! Limpe a sujeira e, ao final de cada nível,
-            descubra a <strong className="font-semibold text-accent">frase secreta</strong> para avançar.
-            Anote as frases, elas são sua chave para os próximos níveis!
-          </div>
-        )}
+        <Image 
+          src="https://incentivobombril.com.br/imagens/logoGema01.png" 
+          alt="Logo Desafio Faxina Total" 
+          width={200} 
+          height={80} 
+          className="mx-auto h-12 sm:h-16 md:h-20 w-auto object-contain"
+          priority
+          data-ai-hint="game logo"
+        />
         {gameState !== 'gameOver' && gameState !== 'idle' && (
-          <p className="text-base sm:text-lg text-foreground mt-1 sm:mt-2">
+          <p className="text-base sm:text-lg text-foreground mt-2 sm:mt-3">
             Nível: {currentLevelNumber} - Limpe a bagunça antes que o tempo acabe!
           </p>
         )}
       </header>
 
       <main className="w-full max-w-4xl bg-card p-3 sm:p-6 rounded-xl shadow-2xl">
-        <div className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:gap-4 items-center mb-4 sm:mb-6 w-full">
-          <TimerDisplay timeLeft={timeLeft} className="justify-self-start w-full"/>
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center mb-4 sm:mb-6 w-full">
+          <TimerDisplay timeLeft={timeLeft} className="w-full"/>
           
-          <div className="flex justify-center">
+          <div className="flex justify-center w-full">
             {gameState === 'idle' && (
-              <Button onClick={initialGameStart} size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md animate-pulse whitespace-nowrap">
+              <Button onClick={initialGameStart} size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md animate-pulse whitespace-nowrap w-full max-w-xs">
                 <PlayIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> Começar Jogo
               </Button>
             )}
@@ -192,27 +192,31 @@ export default function CleanSweepPage() {
                   }}
                   size="lg" 
                   variant="outline" 
-                  className="border-primary text-primary hover:bg-primary/10 shadow-md whitespace-nowrap"
+                  className="border-primary text-primary hover:bg-primary/10 shadow-md whitespace-nowrap w-full max-w-xs"
                >
                 <RotateCcwIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> 
                 {gameState === 'gameOver' ? 'Jogar Novamente' : `Reiniciar Nível ${currentLevelNumber}`}
               </Button>
             )}
           </div>
-          <ScoreDisplay score={score} className="justify-self-end w-full"/>
+          <ScoreDisplay score={score} className="w-full"/>
+        </div>
+        
+        <div className="relative w-full max-w-4xl aspect-[4/3] mx-auto">
+            <GameArea
+              key={resetCanvasKey}
+              onProgressUpdate={handleProgressUpdate}
+              onCleaningComplete={() => { /* Covered by onProgressUpdate */ }}
+              dirtyImageSrc={dirtyImageFallback}
+              cleanImageSrc={currentCleanImageSrc}
+              spongeImageSrc={spongeImage}
+              isGameActive={gameState === 'playing'}
+              isIdle={gameState === 'idle'}
+              resetCanvas={resetCanvasKey > 0} 
+              currentDirtColor={currentDirtColor}
+            />
         </div>
 
-        <GameArea
-          key={resetCanvasKey}
-          onProgressUpdate={handleProgressUpdate}
-          onCleaningComplete={() => { /* Covered by onProgressUpdate */ }}
-          dirtyImageSrc={dirtyImageFallback}
-          cleanImageSrc={currentCleanImageSrc}
-          spongeImageSrc={spongeImage}
-          isGameActive={gameState === 'playing'}
-          resetCanvas={resetCanvasKey > 0} 
-          currentDirtColor={currentDirtColor}
-        />
         <Image src={dirtyImageFallback || "https://placehold.co/1x1.png"} alt="Superfície Suja Fallback" width={1} height={1} className="hidden" data-ai-hint={dirtyImageAiHint}/>
         <Image src={currentCleanImageSrc} alt="Superfície Limpa Nível Atual" width={1} height={1} className="hidden" data-ai-hint={cleanImageAiHint}/>
         <Image src={spongeImage} alt="Esponja" width={1} height={1} className="hidden" data-ai-hint={spongeImageAiHint}/>
@@ -234,7 +238,6 @@ export default function CleanSweepPage() {
               setShowPhraseError(false);
             } else if (status === 'lost') { 
               setGameState('idle'); 
-              // handleStartOrRestart(currentLevelIndex); // User might want to exit not restart
             } else if (status === 'gameOver') {
               setGameState('idle');
               handleStartOrRestart(0);

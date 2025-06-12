@@ -8,7 +8,7 @@ import Image from 'next/image';
 const SPONGE_RADIUS = 50;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-const CLEANING_DIFFICULTY_FACTOR = 15.0; // Significantly increased difficulty
+const CLEANING_DIFFICULTY_FACTOR = 15.0; 
 
 interface GameAreaProps {
   onProgressUpdate: (progress: number) => void;
@@ -17,6 +17,7 @@ interface GameAreaProps {
   cleanImageSrc: string;
   spongeImageSrc: string;
   isGameActive: boolean;
+  isIdle: boolean; // New prop for instruction overlay
   resetCanvas: boolean;
   currentDirtColor: string;
 }
@@ -69,6 +70,7 @@ const GameArea: React.FC<GameAreaProps> = ({
   cleanImageSrc,
   spongeImageSrc,
   isGameActive,
+  isIdle,
   resetCanvas,
   currentDirtColor,
 }) => {
@@ -89,10 +91,10 @@ const GameArea: React.FC<GameAreaProps> = ({
 
   const initializeBubbles = useCallback((canvas: HTMLCanvasElement) => {
     const newBubbles: Bubble[] = [];
-    const numBubbles = 20;
+    const numBubbles = 20; 
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = (Math.random() * 2.5 + 2.5); // Reduced size
-      const minR = (Math.random() * 1 + 1.5);  // Reduced size
+      const maxR = (Math.random() * 1.5 + 1.0); // Reduced size
+      const minR = (Math.random() * 0.5 + 0.5);  // Reduced size
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -148,13 +150,13 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.2 + 0.6)) {
-          bubble.opacity = Math.min(bubble.opacity, 0.8);
+        if (bubble.opacity >= (Math.random() * 0.2 + 0.6)) { 
+          bubble.opacity = Math.min(bubble.opacity, 0.8); 
           bubble.isFadingIn = false;
         }
       } else {
         bubble.opacity -= bubble.opacitySpeed;
-        if (bubble.opacity <= 0.3) {
+        if (bubble.opacity <= 0.3) { 
           bubble.opacity = 0.3;
           bubble.isFadingIn = true;
         }
@@ -229,18 +231,19 @@ const GameArea: React.FC<GameAreaProps> = ({
 
 
   const handleInteractionStart = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isGameActive) return;
+    if (!isGameActive || isIdle) return;
     if (e.cancelable) e.preventDefault();
     setIsCleaning(true);
     moveSponge(e);
   };
 
   const handleInteractionEnd = () => {
-    if (!isGameActive) return;
+    if (!isGameActive || isIdle) return;
     setIsCleaning(false);
   };
 
   const moveSponge = (e: React.MouseEvent | React.TouchEvent) => {
+    if (isIdle) return; // Prevent sponge movement when instructions are shown
     const canvas = canvasRef.current;
     const sponge = spongeRef.current;
     if (!canvas || !sponge) return;
@@ -271,7 +274,8 @@ const GameArea: React.FC<GameAreaProps> = ({
     sponge.style.height = `${spongeDisplaySize}px`;
     sponge.style.left = `${displayX - spongeDisplaySize / 2}px`;
     sponge.style.top = `${displayY - spongeDisplaySize / 2}px`;
-    sponge.style.display = 'block';
+    sponge.style.display = isGameActive ? 'block' : 'none';
+
 
     if (isCleaning && isGameActive) {
       cleanArea(canvasX, canvasY);
@@ -291,7 +295,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.globalCompositeOperation = originalCompositeOperation;
 
     const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS;
-    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 1.0; // Direct area
+    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 1.0; 
     cleanedPixelsRef.current = newCleanedAmount;
 
     const progress = Math.min(100, (newCleanedAmount / (totalPixelsToCleanRef.current * CLEANING_DIFFICULTY_FACTOR)) * 100);
@@ -337,7 +341,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
         className="absolute top-0 left-0 w-full h-full"
-        style={{ opacity: 0.95 }}
+        style={{ opacity: 0.95 }} // Increased opacity
       />
       <Image
         ref={spongeRef}
@@ -345,12 +349,26 @@ const GameArea: React.FC<GameAreaProps> = ({
         alt="Esponja"
         width={SPONGE_RADIUS * 2}
         height={SPONGE_RADIUS * 2}
-        className="absolute pointer-events-none hidden"
-        style={{ objectFit: 'contain' }}
+        className="absolute pointer-events-none" // Display is handled by moveSponge
+        style={{ objectFit: 'contain', display: 'none', zIndex: 5 }} // Ensure sponge is above canvas
         draggable="false"
         data-ai-hint="kitchen sponge"
         priority
       />
+      {isIdle && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm p-4 z-20 rounded-lg">
+          <div className="bg-card/95 p-4 sm:p-6 rounded-lg shadow-xl max-w-sm sm:max-w-md text-center border border-primary">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-2 sm:mb-3">
+              Instruções do Jogo
+            </h2>
+            <p className="text-xs sm:text-sm text-foreground">
+              Limpe a sujeira arrastando a esponja. Ao final de cada nível, digite a{' '}
+              <strong className="font-semibold text-accent">frase secreta</strong>{' '}
+              para avançar. Anote as frases!
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

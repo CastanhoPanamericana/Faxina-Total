@@ -14,6 +14,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, className }) => {
   return (
     <div className={cn(
         "flex items-center justify-center space-x-2 p-3 sm:p-4 bg-secondary text-secondary-foreground rounded-lg shadow-md font-body border-2 border-primary/40",
+        "justify-self-stretch", // Ensure it stretches in a grid cell
         className
     )}>
       <PercentIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />

@@ -36,7 +36,13 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'http', // Added for bombril images
+        protocol: 'http',
+        hostname: 'incentivobombril.com.br',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https', // Added for bombril logo
         hostname: 'incentivobombril.com.br',
         port: '',
         pathname: '/**',
