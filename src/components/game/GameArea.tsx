@@ -8,6 +8,7 @@ import Image from 'next/image';
 const SPONGE_RADIUS = 50; 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
+const CLEANING_DIFFICULTY_FACTOR = 2.0; // Higher value means more cleaning is required
 
 interface GameAreaProps {
   onProgressUpdate: (progress: number) => void;
@@ -16,7 +17,7 @@ interface GameAreaProps {
   cleanImageSrc: string; 
   spongeImageSrc: string;
   isGameActive: boolean;
-  resetCanvas: boolean; // Sinaliza para recriar o canvas
+  resetCanvas: boolean; 
   currentDirtColor: string; 
 }
 
@@ -90,17 +91,17 @@ const GameArea: React.FC<GameAreaProps> = ({
     const newBubbles: Bubble[] = [];
     const numBubbles = 20; 
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = (Math.random() * 20 + 20); // Adjusted size
-      const minR = (Math.random() * 10 + 10);  // Adjusted size
+      const maxR = (Math.random() * 10 + 10); // Reduced size
+      const minR = (Math.random() * 5 + 5);  // Reduced size
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: minR,
         maxRadius: maxR,
         minRadius: minR,
-        growthSpeed: Math.random() * 0.0075 + 0.0025, // Slower
+        growthSpeed: Math.random() * 0.0075 + 0.0025, 
         opacity: 0,
-        opacitySpeed: Math.random() * 0.001 + 0.0001, // Slower
+        opacitySpeed: Math.random() * 0.001 + 0.0001, 
         isGrowing: true,
         isFadingIn: true,
       });
@@ -147,14 +148,14 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.2 + 0.5)) { 
-          bubble.opacity = Math.min(bubble.opacity, 0.7); 
+        if (bubble.opacity >= (Math.random() * 0.2 + 0.6)) { // Increased base opacity
+          bubble.opacity = Math.min(bubble.opacity, 0.8); 
           bubble.isFadingIn = false;
         }
       } else {
         bubble.opacity -= bubble.opacitySpeed;
-        if (bubble.opacity <= 0.2) { 
-          bubble.opacity = 0.2;
+        if (bubble.opacity <= 0.3) { 
+          bubble.opacity = 0.3;
           bubble.isFadingIn = true;
         }
       }
@@ -162,7 +163,7 @@ const GameArea: React.FC<GameAreaProps> = ({
       if (baseRgb) {
         ctx.fillStyle = `rgba(${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}, ${bubble.opacity})`;
       } else {
-        ctx.fillStyle = `rgba(10, 10, 10, ${bubble.opacity})`; // Darker fallback
+        ctx.fillStyle = `rgba(10, 10, 10, ${bubble.opacity})`; 
       }
       ctx.beginPath();
       ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
@@ -188,8 +189,8 @@ const GameArea: React.FC<GameAreaProps> = ({
       totalPixelsToCleanRef.current = canvas.width * canvas.height;
 
       isFallbackActiveRef.current = true; 
-      initializeBubbles(canvas); // Initialize bubbles for fallback
-      drawFallbackBackground(ctx, canvas); // Draw fallback initially
+      initializeBubbles(canvas); 
+      drawFallbackBackground(ctx, canvas); 
       if (!isGameActive) { 
         animateBubbles();
       }
@@ -205,7 +206,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         animationFrameIdRef.current = null;
       }
     };
-  }, [drawInitialCanvasContent, currentDirtColor]); 
+  }, [drawInitialCanvasContent, currentDirtColor, resetCanvas]); 
 
 
   useEffect(() => {
@@ -290,10 +291,10 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.globalCompositeOperation = originalCompositeOperation;
 
     const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS; 
-    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke; // Multiplier is 1.0
+    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke; 
     cleanedPixelsRef.current = newCleanedAmount;
 
-    const progress = Math.min(100, (newCleanedAmount / totalPixelsToCleanRef.current) * 100); // No extra multiplier
+    const progress = Math.min(100, (newCleanedAmount / (totalPixelsToCleanRef.current * CLEANING_DIFFICULTY_FACTOR)) * 100);
     onProgressUpdate(progress);
 
     if (progress >= 100) {
@@ -336,7 +337,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
         className="absolute top-0 left-0 w-full h-full"
-        style={{ opacity: 0.95 }} // Opacidade alterada para 0.95, mixBlendMode removido
+        style={{ opacity: 0.95 }} 
       />
       <Image
         ref={spongeRef}
@@ -355,3 +356,4 @@ const GameArea: React.FC<GameAreaProps> = ({
 };
 
 export default GameArea;
+
