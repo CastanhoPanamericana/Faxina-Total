@@ -7,7 +7,7 @@ import TimerDisplay from '@/components/game/TimerDisplay';
 import ScoreDisplay from '@/components/game/ScoreDisplay';
 import GameStatusModal from '@/components/game/MedalModal';
 import { Button } from '@/components/ui/button';
-import { PlayIcon, RotateCcwIcon } from 'lucide-react';
+import { PlayIcon, RotateCcwIcon, InfoIcon } from 'lucide-react';
 import Image from 'next/image';
 
 const BASE_INITIAL_TIME = 60; 
@@ -16,7 +16,6 @@ const LEVEL_TIME_DECREMENT = 5;
 const MIN_TIME_LIMIT = 10; 
 const MAX_LEVELS = 3;
 
-// Definindo cores específicas para os níveis
 const LEVEL_SPECIFIC_DIRT_COLORS = [
   '#8B4513', // Nível 1: Marrom
   '#006400', // Nível 2: Verde Escuro
@@ -39,7 +38,7 @@ const levelDetails: Omit<LevelDefinition, 'time' | 'levelNumber' | 'dirtColor'>[
 
 const calculateTimeForLevel = (level: number): number => {
   if (level === 1) {
-    return Math.floor(BASE_INITIAL_TIME * 0.7); // 30% reduction for level 1
+    return Math.floor(BASE_INITIAL_TIME * 0.7); 
   }
   const timeAfterDecrement = Math.floor(BASE_INITIAL_TIME * 0.7) - (level - 1) * LEVEL_TIME_DECREMENT;
   return Math.max(MIN_TIME_LIMIT, timeAfterDecrement);
@@ -52,7 +51,7 @@ const generateLevelConfigs = (): LevelDefinition[] => {
       ...detail,
       levelNumber,
       time: calculateTimeForLevel(levelNumber),
-      dirtColor: LEVEL_SPECIFIC_DIRT_COLORS[index] || '#8B4513', // Fallback para marrom se não houver cor definida
+      dirtColor: LEVEL_SPECIFIC_DIRT_COLORS[index] || '#8B4513', 
     };
   });
 };
@@ -86,7 +85,7 @@ export default function CleanSweepPage() {
     setTimeLeft(currentLevelConfig.time);
     setCurrentDirtColor(currentLevelConfig.dirtColor);
     setCurrentCleanImageSrc(currentLevelConfig.cleanImageSrc);
-    setResetCanvasKey(prev => prev + 1); // Forçar recriação do canvas com nova cor/imagem
+    setResetCanvasKey(prev => prev + 1); 
   }, [currentLevelIndex]);
 
   useEffect(() => {
@@ -107,7 +106,6 @@ export default function CleanSweepPage() {
     setUserInputPhrase("");
     setShowPhraseError(false);
     setGameState('playing');
-    // setResetCanvasKey(prev => prev + 1); // Movido para o useEffect de currentLevelIndex
   }, []);
 
   const handleProgressUpdate = useCallback((progress: number) => {
@@ -124,11 +122,9 @@ export default function CleanSweepPage() {
     if (normalizePhrase(userInputPhrase) === normalizePhrase(expectedPhrase)) {
       setShowPhraseError(false);
       if (currentLevelIndex < MAX_LEVELS - 1) {
-        // Não chamar handleStartOrRestart aqui, apenas mudar o index e o estado
-        // O useEffect de currentLevelIndex cuidará do resto.
         setCurrentLevelIndex(currentLevelIndex + 1);
-        setGameState('playing'); // Para permitir que o useEffect do levelIndex configure o novo nível
-        setUserInputPhrase(""); // Limpa a frase para o próximo nível
+        setGameState('playing'); 
+        setUserInputPhrase(""); 
       } else {
         setGameState('gameOver');
       }
@@ -138,7 +134,6 @@ export default function CleanSweepPage() {
   };
 
   const closeModalAndRestartCurrentLevel = () => {
-    // setGameState('idle'); // Não precisa ir para idle, só reiniciar o nível
     handleStartOrRestart(currentLevelIndex);
   };
 
@@ -146,7 +141,7 @@ export default function CleanSweepPage() {
      setGameState('idle');
      setUserInputPhrase("");
      setShowPhraseError(false);
-     if (gameState === 'gameOver') { // Se era game over e fechou, reseta para o nível 0
+     if (gameState === 'gameOver') { 
         handleStartOrRestart(0);
      }
   };
@@ -161,7 +156,15 @@ export default function CleanSweepPage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 sm:p-6 md:p-8 font-body">
       <header className="mb-4 md:mb-6 text-center">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-headline text-primary drop-shadow-md">Desafio Faxina Total</h1>
-        {gameState !== 'gameOver' && (
+        {gameState === 'idle' && (
+          <div className="mt-3 sm:mt-4 p-3 bg-primary/10 border border-primary/30 rounded-lg text-sm sm:text-base text-foreground shadow">
+            <InfoIcon className="inline-block mr-2 h-5 w-5 text-primary" />
+            Prepare-se para uma faxina desafiadora! Limpe a sujeira e, ao final de cada nível,
+            descubra a <strong className="font-semibold text-accent">frase secreta</strong> para avançar.
+            Anote as frases, elas são sua chave para os próximos níveis!
+          </div>
+        )}
+        {gameState !== 'gameOver' && gameState !== 'idle' && (
           <p className="text-base sm:text-lg text-foreground mt-1 sm:mt-2">
             Nível: {currentLevelNumber} - Limpe a bagunça antes que o tempo acabe!
           </p>
@@ -181,9 +184,7 @@ export default function CleanSweepPage() {
                 onClick={() => {
                   if (gameState === 'gameOver') {
                     handleStartOrRestart(0);
-                  } else if (gameState === 'levelWon') { // Se está em levelWon e clica em reiniciar, reinicia o nível atual
-                     handleStartOrRestart(currentLevelIndex);
-                  } else { // 'playing' ou 'lost'
+                  } else { 
                      handleStartOrRestart(currentLevelIndex);
                   }
                 }}
@@ -202,11 +203,11 @@ export default function CleanSweepPage() {
           key={resetCanvasKey}
           onProgressUpdate={handleProgressUpdate}
           onCleaningComplete={() => { /* Covered by onProgressUpdate */ }}
-          dirtyImageSrc={dirtyImageFallback} // Deve ser sempre vazio para usar fallback
+          dirtyImageSrc={dirtyImageFallback}
           cleanImageSrc={currentCleanImageSrc}
           spongeImageSrc={spongeImage}
           isGameActive={gameState === 'playing'}
-          resetCanvas={resetCanvasKey > 0} // Usado para forçar o reset
+          resetCanvas={resetCanvasKey > 0} 
           currentDirtColor={currentDirtColor}
         />
         <Image src={dirtyImageFallback || "https://placehold.co/1x1.png"} alt="Superfície Suja Fallback" width={1} height={1} className="hidden" data-ai-hint={dirtyImageAiHint}/>
@@ -217,20 +218,20 @@ export default function CleanSweepPage() {
 
       <GameStatusModal
         isOpen={gameState === 'levelWon' || gameState === 'lost' || gameState === 'gameOver'}
-        onClose={ // Botão principal do modal
+        onClose={ 
           gameState === 'levelWon' ? handlePhraseValidation : 
           gameState === 'lost' ? closeModalAndRestartCurrentLevel : 
-          closeModalAndGoToIdle // Para Game Over "Jogar Novamente" ou fechar o modal de levelWon/lost
+          closeModalAndGoToIdle 
         }
-        onSecondaryAction={ // Botão secundário (Fechar/Cancelar)
+        onSecondaryAction={
           (status) => {
-            if (status === 'levelWon') { // Se está no levelWon e clica em fechar
+            if (status === 'levelWon') { 
+              handleStartOrRestart(currentLevelIndex);
               setUserInputPhrase(""); 
               setShowPhraseError(false);
-              // Não faz nada, deixa o modal aberto para tentar a frase
-            } else if (status === 'lost') { // Se perdeu e clica em fechar (em vez de tentar de novo)
-              setGameState('idle'); // Volta ao estado ocioso
-              handleStartOrRestart(currentLevelIndex); // Prepara para reiniciar o nível atual se o usuário quiser
+            } else if (status === 'lost') { 
+              setGameState('idle'); 
+              handleStartOrRestart(currentLevelIndex); 
             } else if (status === 'gameOver') {
               setGameState('idle');
               handleStartOrRestart(0);
@@ -243,7 +244,7 @@ export default function CleanSweepPage() {
           "Parabéns!"
         }
         description={
-          gameState === 'levelWon' ? `Digite a frase secreta para desbloquear o próximo nível:` :
+          gameState === 'levelWon' ? `Digite a frase secreta para desbloquear o próximo nível. Anotou a frase?` :
           gameState === 'lost' ? `Ah, não! Seu tempo acabou. Tente novamente o nível ${currentLevelNumber}!` :
           "Você sabe tudo de Bombril!"
         }
@@ -261,5 +262,3 @@ export default function CleanSweepPage() {
     </div>
   );
 }
-
-    

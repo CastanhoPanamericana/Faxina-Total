@@ -14,14 +14,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MedalIcon, XCircleIcon, CheckCircleIcon, HelpCircleIcon } from 'lucide-react';
+import { MedalIcon, XCircleIcon, CheckCircleIcon, HelpCircleIcon, RotateCcwIcon } from 'lucide-react';
 
 type GameStatus = 'levelWon' | 'lost' | 'gameOver' | 'idle' | 'playing';
 
 interface ModalProps {
   isOpen: boolean;
-  onClose: () => void; // Primary action: Verify Phrase / Next Level / Try Again / Play Again
-  onSecondaryAction?: (status: GameStatus) => void; // Optional: For "Fechar" or alternative actions
+  onClose: () => void; 
+  onSecondaryAction?: (status: GameStatus) => void; 
   title: string;
   description: string;
   status: GameStatus; 
@@ -54,6 +54,12 @@ const GameStatusModal: React.FC<ModalProps> = ({
     return "Continuar"; 
   };
 
+  const getSecondaryButtonText = () => {
+    if (status === 'levelWon') return "Jogar Nível Novamente";
+    if (status === 'lost') return "Sair"; // Ou "Voltar ao Início"
+    return "Fechar"; // Default, mas não será mostrado para gameOver
+  };
+
   const IconComponent = () => {
     if (status === 'levelWon') return <HelpCircleIcon className="w-16 h-16 sm:w-20 sm:h-20 text-blue-500 animate-pop" />;
     if (status === 'lost') return <XCircleIcon className="w-16 h-16 sm:w-20 sm:h-20 text-destructive animate-pop" />;
@@ -62,15 +68,17 @@ const GameStatusModal: React.FC<ModalProps> = ({
   };
   
   const handleOpenChange = (open: boolean) => {
-    if (!open) {
+    if (!open && onSecondaryAction) {
       // Se o modal está sendo fechado por clique fora ou Esc
-      if (status === 'levelWon' && onSecondaryAction) {
-        // Permite que o pai decida o que fazer ao fechar o modal de 'levelWon'
-        // Por exemplo, não fazer nada ou limpar a frase.
-        // onSecondaryAction(status); // Poderia chamar aqui se necessário
+      if (status === 'levelWon') {
+        onSecondaryAction(status); // Permite reiniciar o nível se o jogador fechar sem interagir
+      } else if (status === 'lost' || status === 'gameOver') {
+        onSecondaryAction(status); // Para 'lost' e 'gameOver', fechar o modal via Esc/overlay pode levar ao estado idle
       } else {
-        onClose(); // Chama a ação principal de fechamento para outros status
+        onClose(); 
       }
+    } else if (!open) {
+        onClose();
     }
   };
 
@@ -109,11 +117,11 @@ const GameStatusModal: React.FC<ModalProps> = ({
               {getButtonText()}
             </Button>
           </AlertDialogAction>
-           {/* Botão de Fechar/Cancelar só aparece em levelWon e lost para oferecer uma saída sem ser a ação principal */}
            {(status === 'levelWon' || status === 'lost') && onSecondaryAction && (
              <AlertDialogCancel asChild>
                <Button variant="outline" onClick={() => onSecondaryAction(status)} className="w-full sm:w-auto">
-                 Fechar
+                 {status === 'levelWon' && <RotateCcwIcon className="mr-2 h-4 w-4" />}
+                 {getSecondaryButtonText()}
                </Button>
              </AlertDialogCancel>
            )}
@@ -124,5 +132,3 @@ const GameStatusModal: React.FC<ModalProps> = ({
 };
 
 export default GameStatusModal;
-
-    
