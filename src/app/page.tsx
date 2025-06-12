@@ -179,7 +179,7 @@ export default function CleanSweepPage() {
               <Button 
                 onClick={initialGameStart} 
                 size="lg" 
-                className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md animate-pulse whitespace-nowrap w-full h-[calc(theme(spacing.11)_+_1rem)] sm:h-[calc(theme(spacing.11)_+_1.5rem)] flex items-center justify-center text-base sm:text-lg"
+                className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md animate-pulse whitespace-nowrap w-full h-[calc(theme(spacing.11)_+_1rem)] sm:h-[calc(theme(spacing.11)_+_1.5rem)] flex items-center justify-center text-base sm:text-lg font-bold"
               >
                 <PlayIcon className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> Começar Jogo
               </Button>
@@ -269,3 +269,5 @@ export default function CleanSweepPage() {
     </div>
   );
 }
+
+    

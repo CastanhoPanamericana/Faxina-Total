@@ -83,34 +83,7 @@ const GameArea: React.FC<GameAreaProps> = ({
 
   const bubblesRef = useRef<Bubble[]>([]);
   const animationFrameIdRef = useRef<number | null>(null);
-  const isFallbackActiveRef = useRef<boolean>(true);
-
-  const drawFallbackBackground = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-    ctx.fillStyle = currentDirtColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }, [currentDirtColor]);
-
-  const initializeBubbles = useCallback((canvas: HTMLCanvasElement) => {
-    const newBubbles: Bubble[] = [];
-    const numBubbles = 20; 
-    for (let i = 0; i < numBubbles; i++) {
-      const maxR = (Math.random() * 1.0 + 0.5); // Reduced size further
-      const minR = (Math.random() * 0.25 + 0.25);  // Reduced size further
-      newBubbles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: minR,
-        maxRadius: maxR,
-        minRadius: minR,
-        growthSpeed: Math.random() * 0.005 + 0.0015, // Slower growth
-        opacity: 0,
-        opacitySpeed: Math.random() * 0.0008 + 0.0002, // Slower opacity change
-        isGrowing: true,
-        isFadingIn: true,
-      });
-    }
-    bubblesRef.current = newBubbles;
-  }, []);
+  const isFallbackActiveRef = useRef<boolean>(true); // Assumes fallback is active unless image loads
 
   const bubbleBaseColorForFill = useRef<string>('#323232');
 
@@ -119,23 +92,41 @@ const GameArea: React.FC<GameAreaProps> = ({
   }, [currentDirtColor]);
 
 
+  const drawFallbackBackground = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+    ctx.fillStyle = currentDirtColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, [currentDirtColor]);
+
+  const initializeBubbles = useCallback((canvas: HTMLCanvasElement) => {
+    const newBubbles: Bubble[] = [];
+    const numBubbles = 30; // Increased number of bubbles
+    for (let i = 0; i < numBubbles; i++) {
+      const maxR = Math.random() * 15 + 10; // Radius: 10px to 25px
+      const minR = Math.random() * 5 + 2;   // Radius: 2px to 7px
+      newBubbles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: minR,
+        maxRadius: maxR,
+        minRadius: minR,
+        growthSpeed: Math.random() * 0.1 + 0.05, // Faster growth
+        opacity: 0,
+        opacitySpeed: Math.random() * 0.01 + 0.005, // Faster opacity change
+        isGrowing: true,
+        isFadingIn: true,
+      });
+    }
+    bubblesRef.current = newBubbles;
+  }, []);
+  
   const animateBubbles = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
   
-    if (!ctx || !canvas || !isFallbackActiveRef.current) {
+    if (!ctx || !canvas || !isFallbackActiveRef.current || isGameActive) {
       if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
       return;
-    }
-    // If the game is active, we don't want bubble animations on top of the cleaning layer
-    if (isGameActive) {
-        if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
-        animationFrameIdRef.current = null;
-        // Ensure the static dirt background is drawn if the game just started
-        // ctx.clearRect(0, 0, canvas.width, canvas.height); // This might clear too much if called repeatedly
-        // drawFallbackBackground(ctx, canvas); // This could be redundant if drawn elsewhere
-        return;
     }
   
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -160,14 +151,14 @@ const GameArea: React.FC<GameAreaProps> = ({
   
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.2 + 0.6)) { 
+        if (bubble.opacity >= (Math.random() * 0.3 + 0.5)) { // Max opacity 0.5 to 0.8
           bubble.opacity = Math.min(bubble.opacity, 0.8); 
           bubble.isFadingIn = false;
         }
       } else {
         bubble.opacity -= bubble.opacitySpeed;
-        if (bubble.opacity <= 0.3) { 
-          bubble.opacity = 0.3;
+        if (bubble.opacity <= (Math.random() * 0.1 + 0.2)) { // Min opacity 0.2 to 0.3
+          bubble.opacity = Math.max(bubble.opacity, 0.2);
           bubble.isFadingIn = true;
         }
       }
@@ -187,10 +178,11 @@ const GameArea: React.FC<GameAreaProps> = ({
   }, [drawFallbackBackground, isGameActive, bubbleBaseColorForFill]);
 
 
-  const drawInitialCanvasContent = useCallback(() => {
+  const drawInitialCanvasSetup = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (ctx && canvas) {
+      // Stop any existing animation before resetting
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
         animationFrameIdRef.current = null;
@@ -198,51 +190,55 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       cleanedPixelsRef.current = 0;
       onProgressUpdate(0);
-      totalPixelsToCleanRef.current = canvas.width * canvas.height;
+      // totalPixelsToCleanRef.current is based on fixed CANVAS_WIDTH/HEIGHT, so no need to update here
 
-      isFallbackActiveRef.current = true;
-      initializeBubbles(canvas);
-      drawFallbackBackground(ctx, canvas);
+      isFallbackActiveRef.current = true; // Always assume fallback is active initially
       
-      // Start animations if idle or not actively playing (e.g. initial state)
-      // but only if fallback is active.
-      if (isFallbackActiveRef.current && (isIdle || !isGameActive)) {
+      // Draw static dirt background. If idle, animation useEffect will take over.
+      // If game active, this static background is what's needed.
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawFallbackBackground(ctx, canvas);
+    }
+  }, [onProgressUpdate, drawFallbackBackground]);
+
+
+  // Effect for initial setup and reset
+  useEffect(() => {
+    drawInitialCanvasSetup();
+  }, [drawInitialCanvasSetup, currentDirtColor, resetCanvas]); // resetCanvas key change forces this
+
+
+  // Effect for controlling animation and static background based on game state
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+
+    if (!ctx || !canvas) return;
+
+    if (isIdle) {
+      if (!animationFrameIdRef.current) { // If idle and no animation, start it
+        initializeBubbles(canvas); // Initialize/re-initialize bubbles
         animateBubbles();
       }
+    } else { // Not idle (playing, levelWon, lost, etc.)
+      if (animationFrameIdRef.current) { // If animation is running, stop it
+        cancelAnimationFrame(animationFrameIdRef.current);
+        animationFrameIdRef.current = null;
+      }
+      // For non-idle states, ensure the static dirt background is drawn
+      // This is especially important when transitioning from idle to playing
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawFallbackBackground(ctx, canvas);
     }
-  }, [onProgressUpdate, initializeBubbles, animateBubbles, drawFallbackBackground, isGameActive, isIdle, currentDirtColor]);
 
-
-  useEffect(() => {
-    drawInitialCanvasContent();
+    // Cleanup on unmount or if dependencies change causing this to re-run before new state is processed
     return () => {
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
         animationFrameIdRef.current = null;
       }
     };
-  }, [drawInitialCanvasContent, currentDirtColor, resetCanvas]);
-
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-
-    if (ctx && canvas) {
-      if (isFallbackActiveRef.current && (isIdle || (!isGameActive && !isIdle))) { // Animate if idle or in a non-playing state (like level won, lost) with fallback
-        if (!animationFrameIdRef.current && !isGameActive) { // Ensure not to start if game is active
-            animateBubbles();
-        }
-      } else if (animationFrameIdRef.current && (isGameActive || !isFallbackActiveRef.current)) { // Stop if game active or fallback not active
-        cancelAnimationFrame(animationFrameIdRef.current);
-        animationFrameIdRef.current = null;
-        if (isFallbackActiveRef.current && isGameActive) { // If game just became active, clear bubbles & draw static
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            drawFallbackBackground(ctx, canvas);
-        }
-      }
-    }
-  }, [isIdle, isGameActive, animateBubbles, drawFallbackBackground, currentDirtColor]);
+  }, [isIdle, isGameActive, currentDirtColor, resetCanvas, animateBubbles, drawFallbackBackground, initializeBubbles]);
 
 
   const handleInteractionStart = (e: React.MouseEvent | React.TouchEvent) => {
@@ -356,7 +352,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
         className="absolute top-0 left-0 w-full h-full"
-        style={{ opacity: 0.95 }}
+        style={{ opacity: 0.95 }} 
       />
       <Image
         ref={spongeRef}
@@ -390,3 +386,5 @@ const GameArea: React.FC<GameAreaProps> = ({
 };
 
 export default GameArea;
+
+    
