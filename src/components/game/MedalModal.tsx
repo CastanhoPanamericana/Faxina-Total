@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,71 +20,87 @@ type GameStatus = 'levelWon' | 'lost' | 'gameOver' | 'idle' | 'playing';
 
 interface ModalProps {
   isOpen: boolean;
-  onClose: () => void; 
-  onSecondaryAction?: (status: GameStatus) => void; 
+  onClose: () => void;
+  onSecondaryAction?: (status: GameStatus) => void;
   title: string;
   description: string;
-  status: GameStatus; 
+  status: GameStatus;
   level?: number;
   userInputPhrase?: string;
   onPhraseChange?: (value: string) => void;
   showPhraseError?: boolean;
-  expectedPhrase?: string | null; 
+  expectedPhrase?: string | null;
 }
 
-const GameStatusModal: React.FC<ModalProps> = ({ 
-  isOpen, 
-  onClose, 
+const GameStatusModal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
   onSecondaryAction,
-  title, 
-  description, 
-  status, 
+  title,
+  description,
+  status,
   level,
   userInputPhrase,
   onPhraseChange,
   showPhraseError,
   expectedPhrase
 }) => {
+  const actionTakenByButtonRef = useRef(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      actionTakenByButtonRef.current = false; // Reset when modal opens or its state changes while open
+    }
+  }, [isOpen, status]); // Also reset if status changes while modal is open
+
   if (!isOpen) return null;
 
   const getButtonText = () => {
     if (status === 'levelWon') return "Verificar Frase";
     if (status === 'lost') return `Tentar Nível ${level} Novamente`;
     if (status === 'gameOver') return "Jogar Novamente";
-    return "Continuar"; 
+    return "Continuar";
   };
 
   const getSecondaryButtonText = () => {
     if (status === 'levelWon') return "Jogar Nível Novamente";
-    if (status === 'lost') return "Sair"; // Ou "Voltar ao Início"
-    return "Fechar"; // Default, mas não será mostrado para gameOver
+    if (status === 'lost') return "Sair";
+    return "Fechar";
   };
 
   const IconComponent = () => {
     if (status === 'levelWon') return <HelpCircleIcon className="w-16 h-16 sm:w-20 sm:h-20 text-blue-500 animate-pop" />;
     if (status === 'lost') return <XCircleIcon className="w-16 h-16 sm:w-20 sm:h-20 text-destructive animate-pop" />;
     if (status === 'gameOver') return <CheckCircleIcon className="w-16 h-16 sm:w-20 sm:h-20 text-green-500 animate-pop" />;
-    return <MedalIcon className="w-16 h-16 sm:w-20 sm:h-20 text-accent animate-pop" />; 
+    return <MedalIcon className="w-16 h-16 sm:w-20 sm:h-20 text-accent animate-pop" />;
   };
-  
-  const handleOpenChange = (open: boolean) => {
-    if (!open && onSecondaryAction) {
-      // Se o modal está sendo fechado por clique fora ou Esc
-      if (status === 'levelWon') {
-        onSecondaryAction(status); // Permite reiniciar o nível se o jogador fechar sem interagir
-      } else if (status === 'lost' || status === 'gameOver') {
-        onSecondaryAction(status); // Para 'lost' e 'gameOver', fechar o modal via Esc/overlay pode levar ao estado idle
+
+  const handleModalOpenChange = (openValue: boolean) => {
+    if (!openValue) { // Dialog is closing
+      if (actionTakenByButtonRef.current) {
+        // A button was clicked, its onClick handler already managed the action.
+        // The ref is reset when the modal opens/status changes.
+      } else if (onSecondaryAction) {
+        // No button was clicked, so it's an ESC or Overlay dismissal.
+        // Trigger the secondary action.
+        if (status === 'levelWon' || status === 'lost' || status === 'gameOver') {
+          onSecondaryAction(status);
+        } else {
+          // Fallback if status is unexpected, or no secondary action for it
+          onClose(); // Default close action
+        }
       } else {
-        onClose(); 
-      }
-    } else if (!open) {
+        // No onSecondaryAction defined, default to onClose for ESC/Overlay.
         onClose();
+      }
+      // Reset ref after handling close, regardless of how it was initiated, for next modal cycle.
+      actionTakenByButtonRef.current = false;
     }
   };
 
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
+    <AlertDialog open={isOpen} onOpenChange={handleModalOpenChange}>
       <AlertDialogContent className="font-body w-[90vw] max-w-md">
         <AlertDialogHeader>
           <div className="flex justify-center mb-3 sm:mb-4">
@@ -93,6 +109,11 @@ const GameStatusModal: React.FC<ModalProps> = ({
           <AlertDialogTitle className="text-center text-xl sm:text-2xl font-headline">{title}</AlertDialogTitle>
           <AlertDialogDescription className="text-center text-sm sm:text-md">
             {description}
+            {status === 'levelWon' && expectedPhrase && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Dica: A frase é "{expectedPhrase}". Anote para não esquecer!
+              </p>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -113,13 +134,26 @@ const GameStatusModal: React.FC<ModalProps> = ({
 
         <AlertDialogFooter className="mt-3 sm:mt-4 flex flex-col sm:flex-row sm:justify-center gap-2">
           <AlertDialogAction asChild>
-            <Button onClick={onClose} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button
+              onClick={() => {
+                actionTakenByButtonRef.current = true;
+                onClose();
+              }}
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
               {getButtonText()}
             </Button>
           </AlertDialogAction>
            {(status === 'levelWon' || status === 'lost') && onSecondaryAction && (
              <AlertDialogCancel asChild>
-               <Button variant="outline" onClick={() => onSecondaryAction(status)} className="w-full sm:w-auto">
+               <Button
+                 variant="outline"
+                 onClick={() => {
+                   actionTakenByButtonRef.current = true;
+                   onSecondaryAction(status);
+                 }}
+                 className="w-full sm:w-auto"
+               >
                  {status === 'levelWon' && <RotateCcwIcon className="mr-2 h-4 w-4" />}
                  {getSecondaryButtonText()}
                </Button>

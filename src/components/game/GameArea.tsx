@@ -5,20 +5,20 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 
-const SPONGE_RADIUS = 50; 
+const SPONGE_RADIUS = 50;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-const CLEANING_DIFFICULTY_FACTOR = 4.5; // Increased difficulty
+const CLEANING_DIFFICULTY_FACTOR = 15.0; // Significantly increased difficulty
 
 interface GameAreaProps {
   onProgressUpdate: (progress: number) => void;
   onCleaningComplete: () => void;
-  dirtyImageSrc: string; 
-  cleanImageSrc: string; 
+  dirtyImageSrc: string;
+  cleanImageSrc: string;
   spongeImageSrc: string;
   isGameActive: boolean;
-  resetCanvas: boolean; 
-  currentDirtColor: string; 
+  resetCanvas: boolean;
+  currentDirtColor: string;
 }
 
 interface Bubble {
@@ -47,7 +47,7 @@ const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
 
 const darkenColor = (hexColor: string, percent: number): string => {
   const rgb = hexToRgb(hexColor);
-  if (!rgb) return '#323232'; 
+  if (!rgb) return '#323232';
 
   const factor = 1 - percent / 100;
   const r = Math.max(0, Math.floor(rgb.r * factor));
@@ -65,22 +65,22 @@ const darkenColor = (hexColor: string, percent: number): string => {
 const GameArea: React.FC<GameAreaProps> = ({
   onProgressUpdate,
   onCleaningComplete,
-  dirtyImageSrc, 
+  dirtyImageSrc,
   cleanImageSrc,
   spongeImageSrc,
   isGameActive,
-  resetCanvas, 
+  resetCanvas,
   currentDirtColor,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const spongeRef = useRef<HTMLImageElement>(null);
   const [isCleaning, setIsCleaning] = useState(false);
-  const cleanedPixelsRef = useRef<number>(0); 
+  const cleanedPixelsRef = useRef<number>(0);
   const totalPixelsToCleanRef = useRef<number>(CANVAS_WIDTH * CANVAS_HEIGHT);
 
   const bubblesRef = useRef<Bubble[]>([]);
   const animationFrameIdRef = useRef<number | null>(null);
-  const isFallbackActiveRef = useRef<boolean>(true); 
+  const isFallbackActiveRef = useRef<boolean>(true);
 
   const drawFallbackBackground = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     ctx.fillStyle = currentDirtColor;
@@ -89,30 +89,30 @@ const GameArea: React.FC<GameAreaProps> = ({
 
   const initializeBubbles = useCallback((canvas: HTMLCanvasElement) => {
     const newBubbles: Bubble[] = [];
-    const numBubbles = 20; 
+    const numBubbles = 20;
     for (let i = 0; i < numBubbles; i++) {
-      const maxR = (Math.random() * 5 + 5); // Reduced size
-      const minR = (Math.random() * 2 + 3);  // Reduced size
+      const maxR = (Math.random() * 2.5 + 2.5); // Reduced size
+      const minR = (Math.random() * 1 + 1.5);  // Reduced size
       newBubbles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: minR,
         maxRadius: maxR,
         minRadius: minR,
-        growthSpeed: Math.random() * 0.0075 + 0.0025, 
+        growthSpeed: Math.random() * 0.0075 + 0.0025,
         opacity: 0,
-        opacitySpeed: Math.random() * 0.001 + 0.0001, 
+        opacitySpeed: Math.random() * 0.001 + 0.0001,
         isGrowing: true,
         isFadingIn: true,
       });
     }
     bubblesRef.current = newBubbles;
   }, []);
-  
+
   const bubbleBaseColorForFill = useRef<string>('#323232');
 
   useEffect(() => {
-    bubbleBaseColorForFill.current = darkenColor(currentDirtColor, 75); 
+    bubbleBaseColorForFill.current = darkenColor(currentDirtColor, 75); // Darker bubbles
   }, [currentDirtColor]);
 
 
@@ -125,10 +125,10 @@ const GameArea: React.FC<GameAreaProps> = ({
       animationFrameIdRef.current = null;
       return;
     }
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height); 
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawFallbackBackground(ctx, canvas);
-    
+
     const baseRgb = hexToRgb(bubbleBaseColorForFill.current);
 
     bubblesRef.current.forEach(bubble => {
@@ -148,22 +148,22 @@ const GameArea: React.FC<GameAreaProps> = ({
 
       if (bubble.isFadingIn) {
         bubble.opacity += bubble.opacitySpeed;
-        if (bubble.opacity >= (Math.random() * 0.2 + 0.6)) { 
-          bubble.opacity = Math.min(bubble.opacity, 0.8); 
+        if (bubble.opacity >= (Math.random() * 0.2 + 0.6)) {
+          bubble.opacity = Math.min(bubble.opacity, 0.8);
           bubble.isFadingIn = false;
         }
       } else {
         bubble.opacity -= bubble.opacitySpeed;
-        if (bubble.opacity <= 0.3) { 
+        if (bubble.opacity <= 0.3) {
           bubble.opacity = 0.3;
           bubble.isFadingIn = true;
         }
       }
-      
+
       if (baseRgb) {
         ctx.fillStyle = `rgba(${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}, ${bubble.opacity})`;
       } else {
-        ctx.fillStyle = `rgba(10, 10, 10, ${bubble.opacity})`; 
+        ctx.fillStyle = `rgba(10, 10, 10, ${bubble.opacity})`;
       }
       ctx.beginPath();
       ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
@@ -183,15 +183,15 @@ const GameArea: React.FC<GameAreaProps> = ({
         cancelAnimationFrame(animationFrameIdRef.current);
         animationFrameIdRef.current = null;
       }
-      
-      cleanedPixelsRef.current = 0; 
+
+      cleanedPixelsRef.current = 0;
       onProgressUpdate(0);
       totalPixelsToCleanRef.current = canvas.width * canvas.height;
 
-      isFallbackActiveRef.current = true; 
-      initializeBubbles(canvas); 
-      drawFallbackBackground(ctx, canvas); 
-      if (!isGameActive) { 
+      isFallbackActiveRef.current = true;
+      initializeBubbles(canvas);
+      drawFallbackBackground(ctx, canvas);
+      if (!isGameActive) {
         animateBubbles();
       }
     }
@@ -206,7 +206,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         animationFrameIdRef.current = null;
       }
     };
-  }, [drawInitialCanvasContent, currentDirtColor, resetCanvas]); 
+  }, [drawInitialCanvasContent, currentDirtColor, resetCanvas]);
 
 
   useEffect(() => {
@@ -214,7 +214,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     const ctx = canvas?.getContext('2d');
 
     if (isFallbackActiveRef.current && !isGameActive && ctx && canvas) {
-      if (!animationFrameIdRef.current) { 
+      if (!animationFrameIdRef.current) {
         animateBubbles();
       }
     } else if (animationFrameIdRef.current && (isGameActive || !isFallbackActiveRef.current)) {
@@ -222,7 +222,7 @@ const GameArea: React.FC<GameAreaProps> = ({
       animationFrameIdRef.current = null;
       if (isFallbackActiveRef.current && isGameActive && ctx && canvas) {
         ctx.clearRect(0,0,canvas.width, canvas.height);
-        drawFallbackBackground(ctx, canvas); 
+        drawFallbackBackground(ctx, canvas);
       }
     }
   }, [isGameActive, animateBubbles, drawFallbackBackground, currentDirtColor]);
@@ -264,7 +264,7 @@ const GameArea: React.FC<GameAreaProps> = ({
     const scaleY = canvas.height / rect.height;
     const canvasX = displayX * scaleX;
     const canvasY = displayY * scaleY;
-    
+
     const spongeDisplaySize = SPONGE_RADIUS * 2 / Math.min(scaleX, scaleY);
 
     sponge.style.width = `${spongeDisplaySize}px`;
@@ -290,15 +290,15 @@ const GameArea: React.FC<GameAreaProps> = ({
     ctx.fill();
     ctx.globalCompositeOperation = originalCompositeOperation;
 
-    const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS; 
-    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke; 
+    const cleanedAreaThisStroke = Math.PI * SPONGE_RADIUS * SPONGE_RADIUS;
+    const newCleanedAmount = cleanedPixelsRef.current + cleanedAreaThisStroke * 1.0; // Direct area
     cleanedPixelsRef.current = newCleanedAmount;
 
     const progress = Math.min(100, (newCleanedAmount / (totalPixelsToCleanRef.current * CLEANING_DIFFICULTY_FACTOR)) * 100);
     onProgressUpdate(progress);
 
     if (progress >= 100) {
-      onCleaningComplete(); 
+      onCleaningComplete();
     }
   };
 
@@ -337,16 +337,16 @@ const GameArea: React.FC<GameAreaProps> = ({
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
         className="absolute top-0 left-0 w-full h-full"
-        style={{ opacity: 0.95 }} 
+        style={{ opacity: 0.95 }}
       />
       <Image
         ref={spongeRef}
         src={spongeImageSrc}
         alt="Esponja"
-        width={SPONGE_RADIUS * 2} 
-        height={SPONGE_RADIUS * 2} 
+        width={SPONGE_RADIUS * 2}
+        height={SPONGE_RADIUS * 2}
         className="absolute pointer-events-none hidden"
-        style={{ objectFit: 'contain' }} 
+        style={{ objectFit: 'contain' }}
         draggable="false"
         data-ai-hint="kitchen sponge"
         priority
