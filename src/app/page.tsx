@@ -14,12 +14,14 @@ const BASE_INITIAL_TIME = 60;
 const CLEAN_THRESHOLD = 100; 
 const LEVEL_TIME_DECREMENT = 5; 
 const MIN_TIME_LIMIT = 10; 
-const MAX_LEVELS = 3;
+const MAX_LEVELS = 5; // Atualizado para 5 níveis
 
 const LEVEL_SPECIFIC_DIRT_COLORS = [
   '#8B4513', // Nível 1: Marrom
-  '#006400', // Nível 2: Verde Escuro
+  '#006400', // Nível 2: Verde
   '#8B0000', // Nível 3: Vermelho Escuro
+  '#800080', // Nível 4: Roxo
+  '#FFA500', // Nível 5: Laranja
 ];
 
 interface LevelDefinition {
@@ -31,9 +33,11 @@ interface LevelDefinition {
 }
 
 const levelDetails: Omit<LevelDefinition, 'time' | 'levelNumber' | 'dirtColor'>[] = [
-  { cleanImageSrc: "http://incentivobombril.com.br/imagens/bombrilgame01.jpeg", unlockPhrase: "Não machuca as mãos" },
-  { cleanImageSrc: "http://incentivobombril.com.br/imagens/bombrilgame02.jpeg", unlockPhrase: "sinônimo de categoria" },
-  { cleanImageSrc: "http://incentivobombril.com.br/imagens/bombrilgame03.jpeg", unlockPhrase: "esponja de aço é bombril" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela1.png", unlockPhrase: "não machuca as mãos" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela2.png", unlockPhrase: "sinônimo de categoria" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela3.png", unlockPhrase: "esponja de aço é bombril" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela4.png", unlockPhrase: "limpa, perfuma e dá brilho" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela5.png", unlockPhrase: "5 fragrâncias exclusivas" },
 ];
 
 const calculateTimeForLevel = (level: number): number => {
@@ -157,9 +161,9 @@ export default function CleanSweepPage() {
         <Image 
           src="https://incentivobombril.com.br/imagens/logoGema01.png" 
           alt="Logo Game Desafio Faxina Total" 
-          width={250} // Adjusted size
-          height={100} // Adjusted size
-          className="mx-auto h-auto w-auto max-h-[100px] sm:max-h-[120px] object-contain" // Adjusted classes for responsiveness
+          width={250 * 1.5} 
+          height={100 * 1.5}
+          className="mx-auto h-auto w-auto max-h-[150px] sm:max-h-[180px] object-contain" 
           priority
           data-ai-hint="game logo bombril"
         />
@@ -192,7 +196,7 @@ export default function CleanSweepPage() {
                        handleStartOrRestart(currentLevelIndex);
                     }
                   }}
-                  variant="secondary" // Use secondary for brown style
+                  variant="secondary" 
                   className="shadow-md whitespace-nowrap w-full h-12 sm:h-14 flex items-center justify-center text-sm sm:text-base font-semibold rounded-md border border-yellow-900"
                >
                 <RotateCcwIcon className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> 
@@ -267,3 +271,5 @@ export default function CleanSweepPage() {
     </div>
   );
 }
+
+    
