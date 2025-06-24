@@ -12,7 +12,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['Lato', 'sans-serif'],
-        headline: ['Lato', 'sans-serif'], // Alterado para Lato
+        headline: ['Lato', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
