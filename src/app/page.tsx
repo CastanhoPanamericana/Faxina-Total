@@ -7,7 +7,7 @@ import TimerDisplay from '@/components/game/TimerDisplay';
 import ScoreDisplay from '@/components/game/ScoreDisplay';
 import GameStatusModal from '@/components/game/MedalModal';
 import { Button } from '@/components/ui/button';
-import { RotateCcwIcon } from 'lucide-react';
+import { RotateCcwIcon, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 
 const BASE_INITIAL_TIME = 60; 
@@ -157,21 +157,32 @@ export default function CleanSweepPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 sm:p-6 md:p-8 font-body">
-      <header className="mb-4 md:mb-6 text-center">
-        <Image 
-          src="https://incentivobombril.com.br/imagens/logoGema01.png" 
-          alt="Logo Game Desafio Faxina Total" 
-          width={250 * 1.5} 
-          height={100 * 1.5}
-          className="mx-auto h-auto w-auto max-h-[150px] sm:max-h-[180px] object-contain" 
-          priority
-          data-ai-hint="game logo bombril"
-        />
-        {gameState !== 'gameOver' && gameState !== 'idle' && (
-          <p className="text-base sm:text-lg text-foreground mt-2 sm:mt-3">
-            Nível: {currentLevelNumber} - Limpe a bagunça antes que o tempo acabe!
-          </p>
-        )}
+      <header className="w-full max-w-2xl mb-4 md:mb-6 grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
+        <div className="justify-self-start">
+            <Button asChild variant="outline">
+              <a href="https://incentivobombril.com.br/course/view.php?id=2" className="flex items-center">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  <span>Voltar</span>
+              </a>
+            </Button>
+        </div>
+        <div className="flex flex-col items-center text-center">
+          <Image 
+            src="https://incentivobombril.com.br/imagens/logoGema01.png" 
+            alt="Logo Game Desafio Faxina Total" 
+            width={250 * 1.5} 
+            height={100 * 1.5}
+            className="h-auto w-auto max-h-[150px] sm:max-h-[180px] object-contain" 
+            priority
+            data-ai-hint="game logo bombril"
+          />
+          {gameState !== 'gameOver' && gameState !== 'idle' && (
+            <p className="text-base sm:text-lg text-foreground mt-2 sm:mt-3">
+              Nível: {currentLevelNumber} - Limpe a bagunça antes que o tempo acabe!
+            </p>
+          )}
+        </div>
+        <div /> {/* Spacer for the grid to keep the logo centered */}
       </header>
 
       <main className="w-full max-w-2xl bg-card p-3 sm:p-5 rounded-xl shadow-lg border border-border">
@@ -265,7 +276,13 @@ export default function CleanSweepPage() {
         expectedPhrase={gameState === 'levelWon' ? levelConfigs[currentLevelIndex].unlockPhrase : null}
       />
 
-      <footer className="mt-6 md:mt-10 text-center text-xs sm:text-sm text-muted-foreground">
+      <footer className="mt-6 md:mt-10 text-center text-xs sm:text-sm text-muted-foreground flex flex-col items-center gap-4">
+        <Button asChild variant="outline">
+          <a href="https://incentivobombril.com.br/course/view.php?id=2">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </a>
+        </Button>
         <p>&copy; {new Date().getFullYear()} Desafio Faxina Total. Esfregue com vontade!</p>
       </footer>
     </div>
