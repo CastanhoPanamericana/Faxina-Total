@@ -3,10 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: var(--font-body), sans-serif;
-}
-
 @layer base {
   :root {
     --background: 35 50% 95%; /* Light Cream */
@@ -42,9 +38,6 @@ body {
     --sidebar-accent-foreground: 210 29% 15%;
     --sidebar-border: 208 33% 75%;
     --sidebar-ring: 208 33% 51%;
-
-    /* Font variables */
-    --font-lato: "Lato", sans-serif;
   }
   .dark {
     --background: 30 15% 10%;
@@ -88,9 +81,5 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-lato); 
-  }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-lato); 
   }
 }
