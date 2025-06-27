@@ -34,9 +34,9 @@ interface LevelDefinition {
 }
 
 const levelDetails: Omit<LevelDefinition, 'time' | 'levelNumber' | 'dirtColor'>[] = [
-  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela1.png", unlockPhrase: "não machuca as mãos" },
-  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela2.png", unlockPhrase: "sinônimo de categoria" },
-  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela3.png", unlockPhrase: "esponja de aço é bombril" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela1.png", unlockPhrase: "Não machuca as mãos" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela2.png", unlockPhrase: "Sinônimo de categoria" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela3.png", unlockPhrase: "Esponja de aço é Bombril" },
   { cleanImageSrc: "http://incentivobombril.com.br/imagens/limpadores1.png", unlockPhrase: "Limpa, perfuma e dá brilho" },
   { cleanImageSrc: "http://incentivobombril.com.br/imagens/limpadores2.png", unlockPhrase: "5 fragrâncias exclusivas" },
   { cleanImageSrc: "http://incentivobombril.com.br/imagens/limpadores3.png", unlockPhrase: "Embalagem inspirada em um diamante" },
