@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useRef } from 'react';
@@ -130,7 +129,7 @@ const GameStatusModal: React.FC<ModalProps> = ({
                  className="w-full sm:w-auto"
                >
                  {status === 'levelWon' && <RotateCcwIcon className="mr-2 h-4 w-4" />}
-                 {getSecondaryButtonTest()}
+                 {getSecondaryButtonText()}
                </Button>
              </AlertDialogCancel>
            )}
