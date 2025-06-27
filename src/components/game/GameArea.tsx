@@ -9,7 +9,7 @@ import { InfoIcon } from 'lucide-react';
 const SPONGE_RADIUS = 50;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-const CLEANING_DIFFICULTY_FACTOR = 15.0; 
+const CLEANING_DIFFICULTY_FACTOR = 13.8; 
 
 interface GameAreaProps {
   onProgressUpdate: (progress: number) => void;
@@ -370,7 +370,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
         className="absolute top-0 left-0 w-full h-full"
-        style={{ opacity: 0.95 }} 
+        style={{ opacity: 0.85 }} 
       />
       <Image
         ref={spongeRef}
@@ -392,9 +392,9 @@ const GameArea: React.FC<GameAreaProps> = ({
               Instruções do Jogo
             </h2>
             <p className="text-xs sm:text-sm text-accent-foreground">
-              Limpe a sujeira arrastando a esponja. Ao final de cada nível, digite a{' '}
-              <strong className="font-semibold text-primary-foreground">frase secreta</strong>{' '}
-              para avançar. Anote as frases para não esquecer!
+              Limpe a sujeira arrastando a esponja. Ao final de cada nível, você descobrirá uma{' '}
+              <strong className="font-semibold text-primary-foreground">frase secreta</strong>!{' '}
+              Avance para conhecer todos os produtos.
             </p>
           </div>
         </div>
@@ -404,4 +404,3 @@ const GameArea: React.FC<GameAreaProps> = ({
 };
 
 export default GameArea;
-

@@ -13,8 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { MedalIcon, XCircleIcon, CheckCircleIcon, HelpCircleIcon, RotateCcwIcon } from 'lucide-react';
+import { MedalIcon, XCircleIcon, CheckCircleIcon, TrophyIcon, RotateCcwIcon } from 'lucide-react';
 
 type GameStatus = 'levelWon' | 'lost' | 'gameOver' | 'idle' | 'playing';
 
@@ -26,10 +25,7 @@ interface ModalProps {
   description: string;
   status: GameStatus;
   level?: number;
-  userInputPhrase?: string;
-  onPhraseChange?: (value: string) => void;
-  showPhraseError?: boolean;
-  expectedPhrase?: string | null;
+  secretPhrase?: string | null;
 }
 
 const GameStatusModal: React.FC<ModalProps> = ({
@@ -40,23 +36,20 @@ const GameStatusModal: React.FC<ModalProps> = ({
   description,
   status,
   level,
-  userInputPhrase,
-  onPhraseChange,
-  showPhraseError,
-  expectedPhrase
+  secretPhrase
 }) => {
   const actionTakenByButtonRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
-      actionTakenByButtonRef.current = false; // Reset when modal opens or its state changes while open
+      actionTakenByButtonRef.current = false;
     }
-  }, [isOpen, status]); // Also reset if status changes while modal is open
+  }, [isOpen, status]); 
 
   if (!isOpen) return null;
 
   const getButtonText = () => {
-    if (status === 'levelWon') return "Verificar Frase";
+    if (status === 'levelWon') return "Continuar";
     if (status === 'lost') return `Tentar Nível ${level} Novamente`;
     if (status === 'gameOver') return "Jogar Novamente";
     return "Continuar";
@@ -69,31 +62,25 @@ const GameStatusModal: React.FC<ModalProps> = ({
   };
 
   const IconComponent = () => {
-    if (status === 'levelWon') return <HelpCircleIcon className="w-16 h-16 sm:w-20 sm:h-20 text-blue-500 animate-pop" />;
+    if (status === 'levelWon') return <TrophyIcon className="w-16 h-16 sm:w-20 sm:h-20 text-accent animate-pop" />;
     if (status === 'lost') return <XCircleIcon className="w-16 h-16 sm:w-20 sm:h-20 text-destructive animate-pop" />;
     if (status === 'gameOver') return <CheckCircleIcon className="w-16 h-16 sm:w-20 sm:h-20 text-green-500 animate-pop" />;
     return <MedalIcon className="w-16 h-16 sm:w-20 sm:h-20 text-accent animate-pop" />;
   };
 
   const handleModalOpenChange = (openValue: boolean) => {
-    if (!openValue) { // Dialog is closing
+    if (!openValue) { 
       if (actionTakenByButtonRef.current) {
-        // A button was clicked, its onClick handler already managed the action.
-        // The ref is reset when the modal opens/status changes.
+        // Button handled the action.
       } else if (onSecondaryAction) {
-        // No button was clicked, so it's an ESC or Overlay dismissal.
-        // Trigger the secondary action.
         if (status === 'levelWon' || status === 'lost' || status === 'gameOver') {
           onSecondaryAction(status);
         } else {
-          // Fallback if status is unexpected, or no secondary action for it
-          onClose(); // Default close action
+          onClose(); 
         }
       } else {
-        // No onSecondaryAction defined, default to onClose for ESC/Overlay.
         onClose();
       }
-      // Reset ref after handling close, regardless of how it was initiated, for next modal cycle.
       actionTakenByButtonRef.current = false;
     }
   };
@@ -109,26 +96,14 @@ const GameStatusModal: React.FC<ModalProps> = ({
           <AlertDialogTitle className="text-center text-xl sm:text-2xl font-headline">{title}</AlertDialogTitle>
           <AlertDialogDescription className="text-center text-sm sm:text-md">
             {description}
-            {status === 'levelWon' && expectedPhrase && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Dica: A frase é "{expectedPhrase}". Anote para não esquecer!
-              </p>
-            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        {status === 'levelWon' && onPhraseChange && (
-          <div className="my-3 sm:my-4 space-y-2">
-            <Input
-              type="text"
-              placeholder="Digite a frase secreta aqui..."
-              value={userInputPhrase}
-              onChange={(e) => onPhraseChange(e.target.value)}
-              className="text-base"
-            />
-            {showPhraseError && (
-              <p className="text-destructive text-xs sm:text-sm text-center">Frase incorreta. Tente novamente!</p>
-            )}
+        {status === 'levelWon' && secretPhrase && (
+          <div className="my-3 sm:my-4 p-3 bg-muted rounded-lg text-center">
+            <p className="text-base sm:text-lg font-bold text-muted-foreground">
+              "{secretPhrase}"
+            </p>
           </div>
         )}
 
@@ -155,7 +130,7 @@ const GameStatusModal: React.FC<ModalProps> = ({
                  className="w-full sm:w-auto"
                >
                  {status === 'levelWon' && <RotateCcwIcon className="mr-2 h-4 w-4" />}
-                 {getSecondaryButtonText()}
+                 {getSecondaryButtonTest()}
                </Button>
              </AlertDialogCancel>
            )}
