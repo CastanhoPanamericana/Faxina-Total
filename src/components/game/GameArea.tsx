@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 "use client";
 
@@ -9,7 +8,7 @@ import { InfoIcon } from 'lucide-react';
 const SPONGE_RADIUS = 50;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-const CLEANING_DIFFICULTY_FACTOR = 13.8; 
+const CLEANING_DIFFICULTY_FACTOR = 12; 
 
 interface GameAreaProps {
   onProgressUpdate: (progress: number) => void;
