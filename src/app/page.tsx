@@ -43,11 +43,8 @@ const levelDetails: Omit<LevelDefinition, 'time' | 'levelNumber' | 'dirtColor'>[
 ];
 
 const calculateTimeForLevel = (level: number): number => {
-  if (level === 1) {
-    return Math.floor(BASE_INITIAL_TIME * 0.7); 
-  }
-  const timeAfterDecrement = Math.floor(BASE_INITIAL_TIME * 0.7) - (level - 1) * LEVEL_TIME_DECREMENT;
-  return Math.max(MIN_TIME_LIMIT, timeAfterDecrement);
+  const baseTimeForLevel = level === 1 ? Math.floor(BASE_INITIAL_TIME * 0.7) : Math.max(MIN_TIME_LIMIT, Math.floor(BASE_INITIAL_TIME * 0.7) - (level - 1) * LEVEL_TIME_DECREMENT);
+  return Math.floor(baseTimeForLevel * 1.2); // Aumenta o tempo em 20%
 };
 
 const generateLevelConfigs = (): LevelDefinition[] => {
@@ -72,6 +69,7 @@ export default function CleanSweepPage() {
   const [score, setScore] = useState(0);
   const [resetCanvasKey, setResetCanvasKey] = useState(0);
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
   
   const [currentDirtColor, setCurrentDirtColor] = useState(levelConfigs[0].dirtColor);
   const [currentCleanImageSrc, setCurrentCleanImageSrc] = useState(levelConfigs[0].cleanImageSrc);
@@ -82,6 +80,10 @@ export default function CleanSweepPage() {
   const dirtyImageAiHint = "fundo sujeira abstrato";
   const cleanImageAiHint = "produto limpeza bombril"; 
   const spongeImageAiHint = "esponja limpeza";
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   useEffect(() => {
     if (currentLevelIndex >= 3) { // Níveis 4, 5, 6 (índice 3, 4, 5)
@@ -276,8 +278,10 @@ export default function CleanSweepPage() {
             Voltar
           </a>
         </Button>
-        <p>&copy; {new Date().getFullYear()} Desafio Faxina Total. Esfregue com vontade!</p>
+        <p>&copy; {currentYear} Desafio Faxina Total. Esfregue com vontade!</p>
       </footer>
     </div>
   );
 }
+
+    
