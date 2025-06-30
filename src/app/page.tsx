@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -14,15 +13,13 @@ const BASE_INITIAL_TIME = 72;
 const CLEAN_THRESHOLD = 100; 
 const LEVEL_TIME_DECREMENT = 5; 
 const MIN_TIME_LIMIT = 10; 
-const MAX_LEVELS = 6; 
+const MAX_LEVELS = 4;
 
 const LEVEL_SPECIFIC_DIRT_COLORS = [
   '#8B4513', // Nível 1: Marrom
   '#006400', // Nível 2: Verde
   '#8B0000', // Nível 3: Vermelho Escuro
   '#800080', // Nível 4: Roxo
-  '#FFA500', // Nível 5: Laranja
-  '#00008B', // Nível 6: Azul Escuro
 ];
 
 interface LevelDefinition {
@@ -34,12 +31,10 @@ interface LevelDefinition {
 }
 
 const levelDetails: Omit<LevelDefinition, 'time' | 'levelNumber' | 'dirtColor'>[] = [
-  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela1.png", unlockPhrase: "Não machuca as mãos" },
-  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela2.png", unlockPhrase: "Sinônimo de categoria" },
-  { cleanImageSrc: "https://incentivobombril.com.br/imagens/tela3.png", unlockPhrase: "Esponja de aço é Bombril" },
-  { cleanImageSrc: "http://incentivobombril.com.br/imagens/limpadores1.png", unlockPhrase: "Limpa, perfuma e dá brilho" },
-  { cleanImageSrc: "http://incentivobombril.com.br/imagens/limpadores2.png", unlockPhrase: "5 fragrâncias exclusivas" },
-  { cleanImageSrc: "http://incentivobombril.com.br/imagens/limpadores3.png", unlockPhrase: "Embalagem inspirada em um diamante" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/bombril1.png", unlockPhrase: "Não machuca as mãos" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/bombril2.png", unlockPhrase: "Sinônimo de categoria" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/limpol1.png", unlockPhrase: "Limpa, perfuma e dá brilho" },
+  { cleanImageSrc: "https://incentivobombril.com.br/imagens/limpol2.png", unlockPhrase: "Embalagem inspirada em um diamante" },
 ];
 
 const calculateTimeForLevel = (level: number): number => {
@@ -86,8 +81,8 @@ export default function CleanSweepPage() {
   }, []);
 
   useEffect(() => {
-    if (currentLevelIndex >= 3) { // Níveis 4, 5, 6 (índice 3, 4, 5)
-      setSpongeImage("http://incentivobombril.com.br/imagens/limpol.png");
+    if (currentLevelIndex >= 2) { // Níveis 3 e 4 (índice 2, 3)
+      setSpongeImage("https://incentivobombril.com.br/imagens/limpolcristal.png");
     } else {
       setSpongeImage("https://bufalloinox.com.br/wp-content/uploads/2021/11/esponja-de-aco-inox.png");
     }
@@ -283,5 +278,3 @@ export default function CleanSweepPage() {
     </div>
   );
 }
-
-    
